@@ -9,6 +9,18 @@ public class PlateInfoDownloadStore extends DownloadStore {
 	static String URL = "http://das.sdss.org/spectro/1d_26/";
 	
 	public PlateInfoDownloadStore(double MJD, double plate, double fiber) {
+		super();
+		setType("plateInfo");
+		Rename();
+		
+		/* Example of fully formatted URL is: 
+		 * http://das.sdss.org/spectro/1d_26/1615/1d/spSpec-53166-1615-513.fit
+		 * Where MJD = 53166, plate = 1615, and fiber = 513 */
+		_formattedForWGET = URL + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiber + ".fit";
+	}
+	
+	public PlateInfoDownloadStore(double MJD, double plate, double fiber, WorkingDirectory wd) {
+		super(wd);
 		setType("plateInfo");
 		Rename();
 		

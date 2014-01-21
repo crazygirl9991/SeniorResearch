@@ -2,23 +2,28 @@ package downloadCenter;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Scanner;
 
 public enum WorkingDirectory {
-	DOWNLOADS( "/downloads/", new CommandExecutor() ),
-	UNKNOWN("", new CommandExecutor() );
+	DOWNLOADS( "/downloads/"),
+	UNKNOWN("/./"),
+	STUB("/stub/");
 	
 	private String _workingDirectory = "";
 	
-	WorkingDirectory(String workingDirectory, CommandExecutor ce) {
+	WorkingDirectory(String wd) {
+		_workingDirectory = wd;
+	}
 	
-			try {
-				this._workingDirectory = Pwd(ce) + workingDirectory;
-				findOrCreate(ce);
-			} catch(Exception e) {
-				e.printStackTrace( new PrintStream("ERRORLOG.txt") );
-			}
+	public void Instantiate() {
+		CommandExecutor ce = new CommandExecutor();
+		try {
+			String tempWD = _workingDirectory;
+			this._workingDirectory = Pwd(ce) + tempWD;
+			findOrCreate(ce);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public String toString() {

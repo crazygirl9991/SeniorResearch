@@ -7,12 +7,8 @@ public class CommandExecutor {
 	Runtime _runtime;
 	
 	
-	public CommandExecutor() throws UnsupportedOperationException {
-		try {
-			_runtime = Runtime.getRuntime();
-		} catch (Exception e) {
-			throw ( new UnsupportedOperationException("ERROR: Can't get Runtime.", e) );
-		}
+	public CommandExecutor() {
+		_runtime = Runtime.getRuntime();
 	}
 	
 	/**

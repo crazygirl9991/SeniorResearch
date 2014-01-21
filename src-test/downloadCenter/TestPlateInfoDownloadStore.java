@@ -14,7 +14,7 @@ public class TestPlateInfoDownloadStore {
 	@Test
 	public void testPlateInfoDownloadStore() {
 		double mockMJD = 1.0, mockPlate = 1.0, mockFiber = 1.0;
-		DownloadStore store = new PlateInfoDownloadStore(mockMJD, mockPlate, mockFiber);
+		DownloadStore store = new PlateInfoDownloadStore(mockMJD, mockPlate, mockFiber, WorkingDirectory.STUB);
 		String formattedForWGET = URL + mockPlate + "/1d/spSpec-" + mockMJD + "-" + mockPlate + "-" + mockFiber + ".fit";
 		
 		CommandExecutor mockCE = mock(CommandExecutor.class);

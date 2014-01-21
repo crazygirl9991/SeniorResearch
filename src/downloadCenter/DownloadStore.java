@@ -14,7 +14,15 @@ public abstract class DownloadStore {
 	protected String _outputfile;
 	protected List<String> _list;
 	
-	protected String _workingDir = (WorkingDirectory.DOWNLOADS).toString();
+	protected WorkingDirectory _workingDir = WorkingDirectory.DOWNLOADS;
+	
+	protected DownloadStore() {
+		_workingDir.Instantiate();
+	}
+	
+	protected DownloadStore(WorkingDirectory wd) {
+		_workingDir = wd;
+	}
 	
 	/**
 	 * Takes the name of an input file and produces the name of an output file.
@@ -67,8 +75,8 @@ public abstract class DownloadStore {
 	 * @throws IOException
 	 */
 	public void Download(CommandExecutor ce) throws IOException {
-		String path = _workingDir + _outputfile;
-		ce.wget(path, _workingDir);
+		String path = _workingDir.toString() + _outputfile;
+		ce.wget(path, _workingDir.toString() );
 	}
 	
 	/**
@@ -81,7 +89,7 @@ public abstract class DownloadStore {
 		Scanner scanner = new Scanner( new FileReader(_outputfile) );
 		
 		while( scanner.hasNext() ) {
-			TableElement element = new TableElement( _workingDir + scanner.nextLine() );
+			TableElement element = new TableElement( _workingDir.toString() + scanner.nextLine() );
 			element.SaveToTable();
 		}
 		
@@ -89,7 +97,7 @@ public abstract class DownloadStore {
 	}
 	
 	public void Clean(CommandExecutor ce) throws IOException {
-		String outputfilePath = _workingDir + _outputfile;
+		String outputfilePath = _workingDir.toString() + _outputfile;
 		ce.remove(outputfilePath);
 	}
 	
@@ -99,5 +107,6 @@ public abstract class DownloadStore {
 	protected void setType(String type) { _type = type; }
 	public String getInputfile() { return _inputfile; }
 	public String getOutputfile() { return _outputfile; }
+	public void setWorkingDir(WorkingDirectory wd) { _workingDir = wd; }
 
 }
