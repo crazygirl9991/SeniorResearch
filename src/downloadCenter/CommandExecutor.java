@@ -109,6 +109,15 @@ public class CommandExecutor {
 		}
 	}
 	
+	public void createFile(String filename) throws UnsupportedOperationException {
+		try {
+			String command = "echo '## File has not yet been written. ##' > " + filename;
+			_runtime.exec(command);
+		}  catch (Exception e) {
+			throw ( new UnsupportedOperationException("ERROR: Can't create file: " + filename, e) );
+		}
+	}
+	
 	public Runtime getRuntime() {
 		return _runtime;
 	}

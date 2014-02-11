@@ -11,15 +11,19 @@ import java.util.Scanner;
 
 public class TableElement {
 	private static String _tableName = "QuasarSpectraTable.qst";
-	private static String _columnDelimiter = "|";
+	private static String _fileHeader = "## uniqueID    filename   RA,Dec    MJD,Plate,Fiber    matches ##\n";
+	private static String _columnDelimiter = "\t";
 	private static String _listElementDelimiter = ",";
-	//TODO comment and add variable for physical distance versus fiber distance
-	private static Double _distanceThreshold = 55.0; // arc seconds - 55 is the distance of physical fibers
+	//TODO requires really accurate measurements, i.e. accurate to more than 3 decimal places, in order to show differences.
+	private static Double _distanceThreshold = 2.0 / 3600; // 2 arcsecs in degrees
+	 
+	@SuppressWarnings("unused")
+	private static Double _fiberDistanceThreshold = 55.0; // arcsecs - physical limitation of drilling fibers on a plate
 	
 	private int _uniqueID; // not assigned until added to the table
 	private String _filename;
-	private String[] _coords;
-	private String[] _plateInfo;
+	private double[] _coords = {1, 0, 0}; // spherical { rho, theta, phi }
+	private double[] _plateInfo = {0, 0, 0};
 	
 	/* SciencePrimary category will have a 0 if there 
 	  * is another spectrum of the same object with better 
@@ -28,72 +32,143 @@ public class TableElement {
 	//TODO decide about this: private Boolean _sciencePrimary;
 	
 	// this is a comma delimited list of uniqueIDs for different spectra describing the same object
-	private List<Integer> _matches;
+	private List<Integer> _matches = new ArrayList<Integer>();
 
 	public TableElement() {
 		_filename = "unknown";
-		
 	}
 	
 	public TableElement(String filename) {
 		_filename = filename;
 	}
 	
+	public TableElement(String filename, String tableName) {
+		_filename = filename;
+		_tableName = tableName;
+	}
+	
+	/**
+	 * TODO
+	 * @param ce
+	 * @return
+	 * @throws IOException
+	 */
+	public String makeBackup(CommandExecutor ce) throws IOException {
+		String backupFileName = renameForBackup(_tableName) ;
+		
+		try {
+			ce.copy(_tableName, backupFileName);
+		} catch (Exception e) {
+			throw ( new IOException("ERROR: Could not backup table: " + _tableName, e) );
+		}
+		
+		return backupFileName;
+	}
+	
+	/**
+	 * TODO
+	 * @param filename
+	 * @return
+	 */
+	public String renameForBackup(String filename) {
+		String basefilename, path = "";
+		
+		if( _tableName.equals("") ) {
+			basefilename = "default";
+		} else {
+			int indexOfExt = _tableName.lastIndexOf('.');
+			basefilename = _tableName.substring(0, indexOfExt);
+			
+			if( basefilename.contains("/") ) {
+				int indexOfSlash = basefilename.lastIndexOf('/');
+				path = basefilename.substring(0, indexOfSlash+1);
+				basefilename = basefilename.substring( indexOfSlash+1, basefilename.length() );
+			}
+		}
+		
+		String renamed = path + "cp-" + basefilename + ".backup";
+		
+		return renamed;
+	}
+	
+	/**
+	 * TODO
+	 * @param ce
+	 * @throws IOException
+	 */
+	public void restore(CommandExecutor ce, String filename) throws IOException {
+		try {
+			ce.copy(filename, _tableName);
+		} catch (Exception e) {
+			throw ( new IOException("ERROR: could not restore file " + filename + " to table " + _tableName, e) );
+		}
+	}
+	
 	/**
 	 * Imports current table, locates matches, and assigns
 	 * uniqueID to this table element. Then updates the table.
 	 */
-	public void SaveToTable() throws Exception {
+	public void SaveToTable(CommandExecutor ce) throws Exception {
 		List<TableElement> table = new ArrayList<TableElement>();
+		String backup = makeBackup(ce);
+		
 		try {
 			Scanner scanner = new Scanner( new FileReader(_tableName) );
-		
-			while( scanner.hasNext() ) {
-				TableElement that = parse( scanner.nextLine() );
 			
-				if( this.isMatch(that) )
-					this.addMatch( that.getUniqueID() );
+			//TODO abstract this for possible future improved match algorithm
+			while( scanner.hasNextLine() ) {
+				String nextLine = scanner.nextLine();
+				if( !nextLine.startsWith("#") && !nextLine.equals("") ) {
+					TableElement that = parse(nextLine);
 			
-				table.add(that); // add current table element to list for pending updates
-				scanner.close();
+					if( this.isMatch(that) )
+						this.addMatch( that.getUniqueID() );
+			
+					table.add(that); // add current table element to list for pending updates
+				}
 			}
+			
+			scanner.close();
+			
+			//TODO move this down outside of try or something this is broken you're dumb
+			
+			//TODO also round off error.... FIX IT
+			/* now that we have imported everything, we know what the uniqueID of the latest
+			 * table element is going to be. Here we set that, and append this element to the table.
+			 */
+			this.setUniqueID( table.size() );
+			table.add(this);
+			
+			// update already existing elements with the uniqueID of this within our list
+			for(int i = 0; i < this.getMatches().size(); i++) { 
+				// the indexes to modify are stored in the _matches list
+				int index = this.getMatches().get(i);
+				table.get(index).addMatch( this.getUniqueID() );
+			}
+			
 		} catch(FileNotFoundException f) {
-			Runtime rt = Runtime.getRuntime();
-			try {//TODO write better comment
-				String command = "echo '## Table has not yet been written. ##' > " + _tableName;
-				rt.exec(command);
-			} catch (Exception e) {
-				throw ( new IOException("ERROR: Can't create table: " + _tableName, e) );
-			}
-		} catch(Exception io) {
-			throw ( new IOException("ERROR: Could not read table data.", io) );
-		}
-		
-		/* now that we have imported everything, we know what the uniqueID of the latest
-		 * table element is going to be. Here we set that, and append this element to the table.
-		 */
-		this.setUniqueID( table.size() );
-		table.add(this);
-		
-		// update already existing elements with the uniqueID of this within our list
-		for(int i = 0; i < this.getMatches().size(); i++) { 
-			// the indexes to modify are stored in the _matches list
-			int index = this.getMatches().get(i);
-			table.get(index).addMatch( this.getUniqueID() );
+			ce.createFile(_tableName);
+		} catch(Exception e) {
+			restore(ce, backup);
+			throw ( new IOException("ERROR: Could not read table data.", e) );
 		}
 		
 		try {
 			// and then push these changes back into the table
 			BufferedWriter writer = new BufferedWriter( new FileWriter(_tableName) );
+			writer.write(_fileHeader);
 			for(int i = 0; i < table.size(); i++)
 				writer.write( table.get(i).toString() );
 			
 			writer.close();
-			
 		} catch(Exception e) {
+			restore(ce, backup);
 			throw ( new IOException("ERROR: Could not write updated data to file " + _tableName, e) );
 		}
 	}
+	
+	public String getTableName() { return _tableName; }
+	public void setTableName(String tableName) { _tableName = tableName; }
 	
 	public int getUniqueID() { return _uniqueID; }
 	public void setUniqueID(int ID) { _uniqueID = ID; }
@@ -101,29 +176,83 @@ public class TableElement {
 	public String getFilename() { return _filename; }
 	public void setFilename(String newName) { _filename = newName; }
 	
-	public String[] getCoords() { return _coords; }
-	public void setCoords(String undelimited) {
-		_coords = undelimited.split(_listElementDelimiter);
+	public double[] getCoords() { return _coords; }
+
+	/**
+	 * Takes an string formatted as "RA,Dec".
+	 * @param undelimited
+	 * @throws UnsupportedOperationException
+	 */
+	public void setCoords(String undelimited) throws UnsupportedOperationException {
+		UnsupportedOperationException exception = new UnsupportedOperationException("Please submit coords in the following format: \"RA,Dec\"");
+		
+		if( !undelimited.equals("") ) {
+			String[] coords = undelimited.split(_listElementDelimiter);
+		
+			if( coords.length != 2 )
+				throw exception;
+			else {
+				_coords[1] = Integer.parseInt( coords[0].trim() );
+				_coords[2] = Integer.parseInt( coords[1].trim() );
+			}
+		} else {
+			throw exception;
+		}
 	}
 	
-	public String[] getPlateInfo() { return _plateInfo; }
-	public void setPlateInfo(String undelimited) {
-		_plateInfo = undelimited.split(_listElementDelimiter);
+	public double[] getPlateInfo() { return _plateInfo; }
+	/**
+	 * Takes an string formatted as "MJD,Plate,Fiber".
+	 * @param undelimited
+	 * @throws UnsupportedOperationException
+	 */
+	public void setPlateInfo(String undelimited) throws UnsupportedOperationException {
+		UnsupportedOperationException exception = new UnsupportedOperationException("Please submit plate info in the following format: \"MJD,Plate,Fiber\"");
+		
+		if( !undelimited.equals("") ) {
+			String[] plateInfo = undelimited.split(_listElementDelimiter);
+
+			if( plateInfo.length != 3 )
+				throw exception;
+			else {
+				_plateInfo[0] = Integer.parseInt( plateInfo[0].trim() );
+				_plateInfo[1] = Integer.parseInt( plateInfo[1].trim() );
+				_plateInfo[2] = Integer.parseInt( plateInfo[2].trim() );
+			}
+		} 
 	}
 	
 	public List<Integer> getMatches() { return _matches; }
-	public void setMatches(String newMatches) { 
-		String[] strArray = newMatches.split(_listElementDelimiter);
+	public void setMatches(String newMatches) throws UnsupportedOperationException { 
+		if( newMatches.equals("") ) {
+			_matches = null;
+		} else if( newMatches.equals("none") ) {
+			if( _matches == null ) // if it's null, reinitialize
+				_matches = new ArrayList<Integer>();
+			
+	//		_matches.add(-1);
+		} else {
+			try {
+				if( _matches == null ) // if it's null, reinitialize
+					_matches = new ArrayList<Integer>();
+			
+				String[] strArray = newMatches.split(_listElementDelimiter);
 		
-		for(int i = 0; i < strArray.length; i++)
-			_matches.add( Integer.parseInt(strArray[i]) );
+				for(int i = 0; i < strArray.length; i++)
+					_matches.add( Integer.parseInt(strArray[i]) );
+			} catch (Exception e) {
+				throw (new UnsupportedOperationException("ERROR: newMatches should be comma delimited list of uniqueIDs, i.e. integer values. Was given: " + newMatches, e) );
+			}
+		}
 	}
 	
 	/**
 	 * Returns true if there is a match on record for given table element.
 	 */
 	public Boolean hasMatch() {
-		if( _matches.equals("") )
+		if( _matches == null )
+			return false;
+		else if( _matches.size() == 0 )
 			return false;
 		else
 			return true;
@@ -138,7 +267,7 @@ public class TableElement {
 	}
 	
 	/**
-	 * Returns true if two table elements fall within 55 arcseconds of each other.
+	 * Returns true if two table elements fall within 2.0 arcseconds of each other.
 	 * Equation used is: cos(theta) = (a dot b) / mag(a)*mag(b), except that 
 	 * mag(a) = mag(b) = 1 because the radius is arbitrary.
 	 * 
@@ -146,36 +275,16 @@ public class TableElement {
 	 */
 	public Boolean isMatch(TableElement that) throws UnsupportedOperationException {
 		try {
-			// RA [[hours]], Dec [[degrees]] are spherical
-			double angularDistance = Math.acos( dot( toCartesian( this.getCoords() ), toCartesian( that.getCoords() ) ) );
+			// Radius = 1 (unit circle), RA [[hours]], Dec [[degrees]] are spherical
+			double angularDistance = Math.acos( Utility.dot( Utility.toCartesian( this.getCoords() ), Utility.toCartesian( that.getCoords() ) ) );
 		
-			if(angularDistance >= _distanceThreshold)
+			if( angularDistance <= Utility.degreesToRadians(_distanceThreshold) )
 				return true;
 			else
 				return false;
-		} catch(Exception e) {
+		} catch (Exception e) {
 			throw ( new UnsupportedOperationException("ERROR: match calculation failed!", e) );
 		}
-	}
-	
-	/**
-	 * Returns <x,y,z> = < sin(phi)*cos(theta), sin(phi)*sin(theta), cos(phi) >.
-	 */
-	private double[] toCartesian(String[] spherical) {
-		double[] vector = new double[3];
-		
-		vector[0] = Math.sin( Double.parseDouble(spherical[1]) ) * Math.cos( Double.parseDouble(spherical[0]) );
-		vector[1] = Math.sin( Double.parseDouble(spherical[1]) ) * Math.sin( Double.parseDouble(spherical[0]) );
-		vector[2] = Math.cos( Double.parseDouble(spherical[1]) );
-		
-		return vector;
-	}
-	
-	/**
-	 * Vectors must be three dimensional.
-	 */
-	private double dot(double[] v1, double[] v2) {
-		return (v1[0]*v2[0]) + (v1[1]*v2[1]) + (v1[2]*v2[2]);
 	}
 	
 	/**
@@ -199,21 +308,24 @@ public class TableElement {
 	/**
 	 * Outputs table element as printed in the table (with _columnDelimiter and
 	 * _listElementDelimiter defined above). 
-	 * uniqueID|filename|RA,Dec|MJD,Plate,Dec|Match1,Match2,etc
+	 * uniqueID|filename|RA,Dec|MJD,Plate,Fiber|Match1,Match2,etc
 	 */
 	public String toString() {
 		String col = _columnDelimiter;
 		String lis = _listElementDelimiter;
 		
-		String str = _uniqueID + col + _filename + col + _coords[0] + lis + _coords[1] + col
-				   + _plateInfo[0] + lis + _plateInfo[1] + lis + _plateInfo[2] + col;
+		String str = _uniqueID + col + _filename + col + Utility.toString(lis, _coords) + col
+				   + Utility.toString(lis, _plateInfo) + col;
 		
-		int i;
-		// loop to size - 1 so that the last element isn't followed by a comma
-		for(i = 0; i < _matches.size()-1; i++)
-			str += _matches.get(i) + lis;
-		str += _matches.get( i+1 ); // add last element with no comma
+		if( _matches == null )
+			str += "none";
+		else if( _matches.size() == 0 )
+			str += "none";
+		else {
+			str += Utility.toString(lis, _matches);
+		}
 		
+		str += "\n";
 		return str;
 	}
 	

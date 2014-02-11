@@ -19,7 +19,7 @@ public abstract class DownloadStore {
 	protected DownloadStore() {
 		_workingDir.Instantiate();
 	}
-	
+	 
 	protected DownloadStore(WorkingDirectory wd) {
 		_workingDir = wd;
 	}
@@ -85,12 +85,12 @@ public abstract class DownloadStore {
 	 * check for matches 
 	 * @throws Exception 
 	 */
-	public void UpdateTable() throws Exception {
+	public void UpdateTable(CommandExecutor ce) throws Exception {
 		Scanner scanner = new Scanner( new FileReader(_outputfile) );
 		
 		while( scanner.hasNext() ) {
 			TableElement element = new TableElement( _workingDir.toString() + scanner.nextLine() );
-			element.SaveToTable();
+			element.SaveToTable(ce);
 		}
 		
 		scanner.close();
@@ -107,6 +107,10 @@ public abstract class DownloadStore {
 	protected void setType(String type) { _type = type; }
 	public String getInputfile() { return _inputfile; }
 	public String getOutputfile() { return _outputfile; }
+	public WorkingDirectory getWorkingDir() { return _workingDir; }
 	public void setWorkingDir(WorkingDirectory wd) { _workingDir = wd; }
+	
+	//this might be necessary for further functionality later on
+	//public void setURL(double MJD, double plate, double fiber) { };
 
 }

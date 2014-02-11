@@ -34,6 +34,7 @@ public class TestPlateInfoDownloadStore {
 			scanner.close();
 			store.Clean( new CommandExecutor() );
 		} catch(Exception e) {
+			e.printStackTrace();
 			assert(false);
 		}
 	}

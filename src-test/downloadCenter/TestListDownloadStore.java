@@ -27,6 +27,7 @@ public class TestListDownloadStore {
 			store.Write(mockCE);
 			verify(mockCE).copy(inputfile, outputfile);
 		} catch(Exception e) {
+			e.printStackTrace();
 			assert(false);
 		}
 	}

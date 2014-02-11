@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public enum WorkingDirectory {
-	DOWNLOADS( "/downloads/"),
+	DOWNLOADS("/downloads/"),
 	UNKNOWN("/./"),
 	STUB("/stub/");
 	
