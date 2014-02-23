@@ -192,9 +192,9 @@ public class TestTableElement {
 	public void testTableElementGettersAndSetters() {
 		String filename0 = "some_file0.fits";
 		String coords0 = "205.547,28.377";
-		String[] coordsArray = {"205.547", "28.377"};
+		double[] coordsArray = {1, 205.547, 28.377};
 		String plateInfo0 = "56899,1320,122";
-		String[] plateInfoArray = {"56899", "1320", "122"};
+		int[] plateInfoArray = {56899, 1320, 122};
 	
 		String testTableName = "TestTable.qst";
 		
@@ -211,18 +211,18 @@ public class TestTableElement {
 		} catch (UnsupportedOperationException u) {
 			// verify that coords are not changed when error
 			for(int i = 0; i < coordsArray.length; i++)
-				assertEquals( te0.getCoords()[i], coordsArray[i] );
+				assertEquals( te0.getCoords()[i], coordsArray[i], 0 );
 		} catch (Exception e) {
 			e.printStackTrace();
 			assert(false);
 		}
-		
+
 		try {
 			te0.setCoords("");
 		} catch (UnsupportedOperationException u) {
 			// verify that coords are not changed when error
 			for(int i = 0; i < coordsArray.length; i++)
-				assertEquals( te0.getCoords()[i], coordsArray[i] );
+				assertEquals( te0.getCoords()[i], coordsArray[i], 0 );
 		} catch (Exception e) {
 			e.printStackTrace();
 			assert(false);
@@ -234,7 +234,7 @@ public class TestTableElement {
 		} catch (UnsupportedOperationException u) {
 			// verify that plate info is not changed when error
 			for(int i = 0; i < plateInfoArray.length; i++)
-				assertEquals( te0.getPlateInfo()[i], plateInfoArray[i] );
+				assertEquals( te0.getPlateInfo()[i], plateInfoArray[i], 0 );
 		} catch (Exception e) {
 			e.printStackTrace();
 			assert(false);
@@ -246,7 +246,7 @@ public class TestTableElement {
 		} catch (UnsupportedOperationException u) {
 			// verify that plate info are not changed when error
 			for(int i = 0; i < plateInfoArray.length; i++)
-				assertEquals( te0.getPlateInfo()[i], plateInfoArray[i] );
+				assertEquals( te0.getPlateInfo()[i], plateInfoArray[i], 0 );
 		} catch (Exception e) {
 			e.printStackTrace();
 			assert(false);
@@ -256,7 +256,7 @@ public class TestTableElement {
 	@Test
 	public void testTableMatchFunctions() {
 		String filename0 = "some_file0.fits";
-		String coords0 = "205.547,28.377";
+		String coords0 = "1,205.547,28.377";
 		String plateInfo0 = "56899,1320,122";
 		
 		String testTableName = "TestTable.qst";
@@ -296,7 +296,7 @@ public class TestTableElement {
 			te0.setCoords("lolly,pop");
 			te0.isMatch(te0);
 		} catch (UnsupportedOperationException u) {
-			assertEquals(u.getCause().getClass(), UnsupportedOperationException.class);
+			assertEquals(u.getCause().getClass(), NumberFormatException.class);
 		} catch(Exception e) { // wrong type of exception means failure
 			e.printStackTrace();
 			assert(false);

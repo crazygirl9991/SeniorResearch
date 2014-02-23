@@ -21,8 +21,7 @@ public class ListDownloadStore extends DownloadStore {
 	 */
 	@Override
 	public void Write(CommandExecutor ce) throws IOException {
-		String target =  _workingDir + _outputfile;
-		ce.copy(_inputfile, target);
+		ce.copy(_inputfile, _outputfilePath);
 	}
 	
 }

@@ -14,7 +14,7 @@ public class TableElement {
 	private static String _fileHeader = "## uniqueID    filename   RA,Dec    MJD,Plate,Fiber    matches ##\n";
 	private static String _columnDelimiter = "\t";
 	private static String _listElementDelimiter = ",";
-	//TODO requires really accurate measurements, i.e. accurate to more than 3 decimal places, in order to show differences.
+
 	private static Double _distanceThreshold = 2.0 / 3600; // 2 arcsecs in degrees
 	 
 	@SuppressWarnings("unused")
@@ -23,7 +23,7 @@ public class TableElement {
 	private int _uniqueID; // not assigned until added to the table
 	private String _filename;
 	private double[] _coords = {1, 0, 0}; // spherical { rho, theta, phi }
-	private double[] _plateInfo = {0, 0, 0};
+	private int[] _plateInfo = {0, 0, 0};
 	
 	/* SciencePrimary category will have a 0 if there 
 	  * is another spectrum of the same object with better 
@@ -99,6 +99,7 @@ public class TableElement {
 	public void restore(CommandExecutor ce, String filename) throws IOException {
 		try {
 			ce.copy(filename, _tableName);
+			ce.remove(filename);
 		} catch (Exception e) {
 			throw ( new IOException("ERROR: could not restore file " + filename + " to table " + _tableName, e) );
 		}
@@ -115,12 +116,12 @@ public class TableElement {
 		try {
 			Scanner scanner = new Scanner( new FileReader(_tableName) );
 			
-			//TODO abstract this for possible future improved match algorithm
+			//TODO implement improved match algorithm
 			while( scanner.hasNextLine() ) {
 				String nextLine = scanner.nextLine();
 				if( !nextLine.startsWith("#") && !nextLine.equals("") ) {
 					TableElement that = parse(nextLine);
-			
+			//TODO TODO prevent duplicate files from being written to the table!!
 					if( this.isMatch(that) )
 						this.addMatch( that.getUniqueID() );
 			
@@ -132,7 +133,6 @@ public class TableElement {
 			
 			//TODO move this down outside of try or something this is broken you're dumb
 			
-			//TODO also round off error.... FIX IT
 			/* now that we have imported everything, we know what the uniqueID of the latest
 			 * table element is going to be. Here we set that, and append this element to the table.
 			 */
@@ -153,7 +153,7 @@ public class TableElement {
 			throw ( new IOException("ERROR: Could not read table data.", e) );
 		}
 		
-		try {
+		try {//TODO extract this into ce?
 			// and then push these changes back into the table
 			BufferedWriter writer = new BufferedWriter( new FileWriter(_tableName) );
 			writer.write(_fileHeader);
@@ -184,43 +184,92 @@ public class TableElement {
 	 * @throws UnsupportedOperationException
 	 */
 	public void setCoords(String undelimited) throws UnsupportedOperationException {
-		UnsupportedOperationException exception = new UnsupportedOperationException("Please submit coords in the following format: \"RA,Dec\"");
+	String errorMessage = "Please submit coords in the following format: \"RA,Dec\". Given: " + undelimited;
 		
 		if( !undelimited.equals("") ) {
 			String[] coords = undelimited.split(_listElementDelimiter);
 		
-			if( coords.length != 2 )
-				throw exception;
-			else {
-				_coords[1] = Integer.parseInt( coords[0].trim() );
-				_coords[2] = Integer.parseInt( coords[1].trim() );
+			try {
+				if( coords.length == 2 ) {
+					_coords[0] = 1.0;
+					_coords[1] = Double.parseDouble( coords[0].trim() );
+					_coords[2] = Double.parseDouble( coords[1].trim() );
+				} else if( coords.length == 3 ) {
+					_coords[0] = Double.parseDouble( coords[0].trim() );
+					_coords[1] = Double.parseDouble( coords[1].trim() );
+					_coords[2] = Double.parseDouble( coords[2].trim() );
+				} else {
+					throw (new UnsupportedOperationException(errorMessage) );
+				} 
+			} catch (Exception e) {
+				throw (new UnsupportedOperationException(errorMessage, e) );
 			}
 		} else {
-			throw exception;
+			throw (new UnsupportedOperationException(errorMessage) );
 		}
 	}
 	
-	public double[] getPlateInfo() { return _plateInfo; }
+	public void setCoords(double[] coords) throws UnsupportedOperationException {
+	String errorMessage = "Please submit coords in the following format: \"RA,Dec\". Given: " + Utility.toString(_listElementDelimiter, coords);
+		
+		try {
+			if( coords.length == 2 ) {
+				_coords[0] = 1.0;
+				_coords[1] = coords[0];
+				_coords[2] = coords[1];
+			} else if( coords.length == 3 ) {
+				_coords[0] = coords[0];
+				_coords[1] = coords[1];
+				_coords[2] = coords[2];
+			} else {
+				throw (new UnsupportedOperationException(errorMessage) );
+			}
+		} catch (Exception e) {
+			throw (new UnsupportedOperationException(errorMessage, e) );
+		}
+	}
+	
+	public int[] getPlateInfo() { return _plateInfo; }
 	/**
 	 * Takes an string formatted as "MJD,Plate,Fiber".
 	 * @param undelimited
 	 * @throws UnsupportedOperationException
 	 */
 	public void setPlateInfo(String undelimited) throws UnsupportedOperationException {
-		UnsupportedOperationException exception = new UnsupportedOperationException("Please submit plate info in the following format: \"MJD,Plate,Fiber\"");
+		String errorMessage = "Please submit plate info in the following format: \"MJD,Plate,Fiber\". Given: " + undelimited;
 		
 		if( !undelimited.equals("") ) {
 			String[] plateInfo = undelimited.split(_listElementDelimiter);
-
-			if( plateInfo.length != 3 )
-				throw exception;
-			else {
-				_plateInfo[0] = Integer.parseInt( plateInfo[0].trim() );
-				_plateInfo[1] = Integer.parseInt( plateInfo[1].trim() );
-				_plateInfo[2] = Integer.parseInt( plateInfo[2].trim() );
+			
+			try {
+				if( plateInfo.length != 3 )
+					throw (new UnsupportedOperationException(errorMessage) );
+				else {
+					_plateInfo[0] = Integer.parseInt( plateInfo[0].trim() );
+					_plateInfo[1] = Integer.parseInt( plateInfo[1].trim() );
+					_plateInfo[2] = Integer.parseInt( plateInfo[2].trim() );
+				}
+			}  catch (Exception e) {
+				throw (new UnsupportedOperationException(errorMessage, e) );
 			}
-		} 
+		}
 	}
+	
+	public void setPlateInfo(int[] plateInfo) throws UnsupportedOperationException {
+		String errorMessage = "Please submit plate info in the following format: \"MJD,Plate,Fiber\". Given: " + Utility.toString(_listElementDelimiter, plateInfo);;
+			
+			try {
+				if( plateInfo.length != 3 )
+					throw (new UnsupportedOperationException(errorMessage) );
+				else {
+					_plateInfo[0] = plateInfo[0];
+					_plateInfo[1] = plateInfo[1];
+					_plateInfo[2] = plateInfo[2];
+				}
+			} catch (Exception e) {
+				throw (new UnsupportedOperationException(errorMessage, e) );
+			}
+		}
 	
 	public List<Integer> getMatches() { return _matches; }
 	public void setMatches(String newMatches) throws UnsupportedOperationException { 
@@ -229,8 +278,6 @@ public class TableElement {
 		} else if( newMatches.equals("none") ) {
 			if( _matches == null ) // if it's null, reinitialize
 				_matches = new ArrayList<Integer>();
-			
-	//		_matches.add(-1);
 		} else {
 			try {
 				if( _matches == null ) // if it's null, reinitialize
@@ -314,7 +361,9 @@ public class TableElement {
 		String col = _columnDelimiter;
 		String lis = _listElementDelimiter;
 		
-		String str = _uniqueID + col + _filename + col + Utility.toString(lis, _coords) + col
+		double[] coords = { _coords[1], _coords[2] }; // no need to output the unit radius of 1
+		
+		String str = _uniqueID + col + _filename + col + Utility.toString(lis, coords) + col
 				   + Utility.toString(lis, _plateInfo) + col;
 		
 		if( _matches == null )

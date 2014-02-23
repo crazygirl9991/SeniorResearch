@@ -42,12 +42,12 @@ public class TestDownloadStore {
 	}
 	
 	@Test
-	public void testDownload() {
+	public void testDownload() {//TODO BROKEN	
 		WorkingDirectory wd = WorkingDirectory.STUB;
 		DownloadStore store = new PlateInfoDownloadStore(1, 1, 1, wd);
 		
 		CommandExecutor mockCE = mock(CommandExecutor.class);
-		String path = wd.toString() + store.getOutputfile();
+		String path = store.getOutputfile();
 		
 		try {
 			doNothing().when(mockCE).wget( path, wd.toString() );
@@ -78,12 +78,13 @@ public class TestDownloadStore {
 	}
 	
 	@Test
-	public void testClean() {
+	public void testClean() {//TODO paths yuck wut?
+		
 		WorkingDirectory wd = WorkingDirectory.STUB;
 		DownloadStore store = new PlateInfoDownloadStore(1, 1, 1, wd);
 		
 		CommandExecutor mockCE = mock(CommandExecutor.class);
-		String outputfilePath = wd.toString() + store.getOutputfile();
+		String outputfilePath = store.getOutputfile();
 		
 		try {
 			doNothing().when(mockCE).remove(outputfilePath);

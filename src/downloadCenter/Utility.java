@@ -130,7 +130,8 @@ public class Utility {
 		else if( v1.length == 2 && v2.length == 2 )
 			product = (v1[0]*v2[0]) + (v1[1]*v2[1]);
 		else {
-			String message = "ERROR: Vectors should be equal and have either two or three elements. Was given v1: " + toString(_delim, v1) + " and v2: " + toString(_delim, v2);
+			String message = "ERROR: Vectors should be equal and have either two or three elements. Was given v1: "
+							 + toString(_delim, v1) + " and v2: " + toString(_delim, v2);
 			throw  (new UnsupportedOperationException(message) );
 		}
 		
@@ -142,7 +143,8 @@ public class Utility {
 	 */
 	public static double[] toCartesian(String[] spherical) throws UnsupportedOperationException {
 		if( spherical.length != 3 ) {
-			String message = "ERROR: Should have three array elements, rho,theta,phi. Was given: " + toString(_delim, spherical);
+			String message = "ERROR: Should have three array elements, rho,theta,phi. Was given: " 
+							 + toString(_delim, spherical);
 			throw  (new UnsupportedOperationException(message) );
 		}
 		
@@ -161,7 +163,8 @@ public class Utility {
 		
 			return vector;
 		} catch (Exception e) {
-			String message = "ERROR: Conversion to Cartesian coordinates failed! Given coordinates: " + toString(_delim, spherical);
+			String message = "ERROR: Conversion to Cartesian coordinates failed! Given coordinates: " 
+							 + toString(_delim, spherical);
 			throw (new UnsupportedOperationException(message, e) );
 		}
 	}
@@ -171,7 +174,8 @@ public class Utility {
 	 */
 	public static double[] toCartesian(double[] spherical) throws UnsupportedOperationException {
 		if( spherical.length != 3 ) {
-			String message = "ERROR: Should have three array elements, rho,theta,phi. Was given: " + toString(_delim, spherical);
+			String message = "ERROR: Should have three array elements, rho,theta,phi. Was given: " 
+							 + toString(_delim, spherical);
 			throw  (new UnsupportedOperationException(message) );
 		}
 		
@@ -190,7 +194,8 @@ public class Utility {
 		
 			return vector;
 		} catch (Exception e) {
-			String message = "ERROR: Conversion to Cartesian coordinates failed! Given coordinates: " + toString(_delim, spherical);
+			String message = "ERROR: Conversion to Cartesian coordinates failed! Given coordinates: " 
+							 + toString(_delim, spherical);
 			throw (new UnsupportedOperationException(message, e) );
 		}
 	}
