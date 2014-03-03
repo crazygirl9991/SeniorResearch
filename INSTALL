@@ -1,0 +1,45 @@
+========================================================================
+==
+==	I N S T A L L
+==
+========================================================================
+
+
+
+Installation Instructions 
+========================================================================
+
+
+Code Repository Location
+========================================================================
+https://github.com/crazygirl9991/SeniorResearch
+Go to the directory where you'd like to place the working version of the 
+code. Then do:
+	> git init
+	> git clone https://github.com/crazygirl9991/SeniorResearch
+
+This should check-out the current working version of: 
+     - the downloadCenter Java code
+     - the spectralPlot   Python code  (TOFIX: to be uploaded...) 
+
+
+Compiling the downloadCenter code 
+========================================================================
+The downloadCenter Java code can be compiled using the following steps:
+    > javac -g DownloadCenter.java
+    [gives 12 errors, but it's very, very possible I'm doing something 
+    obviously wrong here!!]
+
+
+Running the downloadCenter code 
+========================================================================
+    In Eclipse: 
+
+    From the command line:
+
+
+Last Updated
+=======================================================================
+Mon Mar  3 17:11:27 EST 2014	by	NPR
+
+

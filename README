@@ -1,0 +1,45 @@
+========================================================================
+==
+==	R E A D M E
+==
+========================================================================
+
+
+
+Overview
+========================================================================
+This is the top-level README file associated with the Tielebein et al. 
+Senior Research thesis project and code. 
+
+The vast majority of this project and code was written by Victoria Tielebein 
+under the guidance of Prof. Gordon T. Richards and Dr. Nicholas P. Ross, at
+Drexel University during the Academic Year 2013-2014. 
+
+
+Purpose
+========================================================================
+The query the SDSS, SDSS-III and potentially future SDSS-IV spectroscopic
+databases to look for objects (quasars) that have multiple repeat spectra, 
+and to see what, if anything has changed between these spectra when observed
+at different epochs. 
+
+
+Code Repository Location
+========================================================================
+https://github.com/crazygirl9991/SeniorResearch
+
+
+Installation 
+========================================================================
+Please see the INSTALL file in this directory. 
+
+
+Notes
+========================================================================
+
+
+Last Updated
+=======================================================================
+Mon Mar  3 17:06:15 EST 2014	by	NPR
+
+
