@@ -52,7 +52,9 @@ Top Level Overview of .java routines
     parse from and create strings for outputting to a Table file. 
 
   TableManager.java
-  - 
+  - Stores table administrative information (e.g. name, table format ) and contains all
+    functionality required to update the table, including provisions for creating and 
+    restoring table back-ups and comparing/storing table elements which match. 
 
   CommandExecutor.java
   - Contains the logic to make changes to the user system, e.g. by creating or removing 

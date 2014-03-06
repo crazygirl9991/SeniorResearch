@@ -13,6 +13,7 @@ Research thesis project and code.
 
 Prerequisites
 ========================================================================
+Java Version 
 
 
 Code Repository Location
@@ -28,12 +29,18 @@ This should check-out the current working version of:
      - the spectralPlot   Python code  (TOFIX: to be uploaded...) 
 
 
+
 Compiling the downloadCenter code 
 ========================================================================
 The downloadCenter Java code can be compiled using the following steps:
+   
     > javac -g DownloadCenter.java
+
     [gives 12 errors, but it's very, very possible I'm doing something 
     obviously wrong here!!]
+
+
+
 
 
 Running the downloadCenter code 
@@ -41,6 +48,7 @@ Running the downloadCenter code
     In Eclipse: 
 
     From the command line:
+
 
 
 Last Updated
