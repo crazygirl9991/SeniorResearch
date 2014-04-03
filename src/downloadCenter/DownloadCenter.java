@@ -2,6 +2,11 @@ package downloadCenter;
 
 import java.util.ArrayList;
 
+/**
+ * Main controller for anything download or table related. Interfaces directly with command line.
+ * @author victoria
+ *
+ */
 public class DownloadCenter {
 	public static double _plateOverlapThreshold = 2.98; // degrees - diameter of each plate
 	
@@ -11,7 +16,7 @@ public class DownloadCenter {
 		double[] coords2 = {1, 189.271, 12.4811};
 		double[] coords3 = {1, 188.062, 27.4019};
 		double[] coords4 = {1, 189.767, 27.4614};
-		
+		 
 		int FIBERS = 640;
 		
 		// Radius = 1 (unit circle), RA [[hours]], Dec [[degrees]] are spherical
@@ -40,13 +45,10 @@ public class DownloadCenter {
 			}
 		
 			try {
-				DownloadStore store = new PlateInfoDownloadStore(downloadList);
-				CommandExecutor ce = new CommandExecutor();
+				FitFileStore store = new FitFileStore(downloadList);
 			
-				store.Write(ce);
-				store.Download(ce);
-				store.UpdateTable(ce);
-				//store.Clean(ce);
+				store.Download();
+				store.UpdateTable();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

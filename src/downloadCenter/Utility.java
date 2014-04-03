@@ -3,7 +3,9 @@ package downloadCenter;
 import java.util.List;
 
 /**
- * Has functions to handle math and array behavior required in downloadCenter.
+ * Contains conversion functions for both arrays and certain mathematical procedures.
+ * @author victoria
+ * 
  */
 public class Utility {
 	private static String _delim = ","; // this is only for in class use (like in creating error messages)
@@ -25,7 +27,7 @@ public class Utility {
 	 */
 	public static String toString(String delimiter, String[] array) {
 		String str;
-		
+		 
 		if(array.length == 0)
 			str = "";
 		else if(array.length == 1)
