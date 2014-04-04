@@ -1,52 +1,66 @@
 package downloadCenter;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 
 @SuppressWarnings("serial")
-public class spectra_plotter extends JComponent {
+public class spectra_plotter extends JComponent implements ActionListener {
 
-	private static final int YSIZE = 800;
+	private static final int YSIZE = 400;
 	private static final int XSIZE = 800;
 	private float minx;
 	private float maxx;
 	private float miny;
 	private float maxy;
-	private float minx2;
-	private float maxx2;
-	private float miny2;
-	private float maxy2;
-	private float[] xdata1;
-	private float[] ydata1;
-	private float[] xdata2;
-	private float[] ydata2;
-	private float[] ratios;
 	private BufferedImage bitmap;
-	private float ratiosmin;
-	private float ratiosmax;
+
 	public static void main(String[] args) throws Exception {
 		float[][] flux = readFitFile("python_code", "spSpec-53847-2235-179.fit");
 		float[][] flux2 = readFitFile("python_code", "spSpec-53729-2236-303.fit");
-
+		int n = Math.min(flux[0].length, flux2[0].length);
+		float[][] ratios = new float[2][n];
+		for (int i = 0; i < n; i++) {
+			ratios[0][i] = flux[0][i];
+			ratios[1][i] = flux[1][i] / flux2[1][i];
+		}
 		JFrame frame = new JFrame("Spectra Plotter");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Container content = frame.getContentPane();
-		spectra_plotter plot = new spectra_plotter(flux, flux2);
-		content.add(plot);
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		spectra_plotter plot = new spectra_plotter(new float[][][] { flux, flux2 }, new Color[] { Color.red, Color.blue });
+		panel.add(plot);
+		spectra_plotter plot2 = new spectra_plotter(new float[][][] { ratios }, new Color[] { Color.green });
+		panel.add(plot2);
+		content.add(panel, BorderLayout.CENTER);
+		JPanel bottom = new JPanel();
+		JButton previous = new JButton("Previous");
+		previous.addActionListener(plot);
+		JButton next = new JButton("Next");
+		next.addActionListener(plot);
+		bottom.add(previous);
+		bottom.add(next);
+		content.add(bottom, BorderLayout.SOUTH);
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
@@ -82,63 +96,64 @@ public class spectra_plotter extends JComponent {
 		return new float[][] { wavelength, flux, extrema };
 	}
 
-	public spectra_plotter(float[][] flux, float[][] flux2) {
+	public spectra_plotter(float[][][] data, Color[] colors) {
 		setPreferredSize(new Dimension(XSIZE, YSIZE));
-		minx = flux[2][0];
-		maxx = flux[2][1];
-		minx2 = flux2[2][0];
-		maxx2 = flux2[2][1];
-		miny = flux[2][2];
-		maxy = flux[2][3];
-		miny2 = flux2[2][2];
-		maxy2 = flux2[2][3];
-		xdata1 = flux[0];
-		ydata1 = flux[1];
-		xdata2 = flux2[0];
-		ydata2 = flux2[1];
-
-		int n = Math.min(ydata1.length, ydata2.length);
-		ratios = new float[n];
-		ratiosmin = ydata1[0]/ydata2[0];
-		ratiosmax = ydata1[0]/ydata2[0];
-		for (int i = 0; i < n; i++) {
-			ratios[i] = ydata1[i] / ydata2[i];
-			if(ratios[i] < ratiosmin)
-				ratiosmin = ratios[i];
-			if(ratios[i] > ratiosmax)
-				ratiosmax = ratios[i];
+		minx = data[0][0][0];
+		maxx = data[0][0][0];
+		miny = data[0][1][0];
+		maxy = data[0][1][0];
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[i][0].length; j++) {
+				float x = data[i][0][j];
+				float y = data[i][1][j];
+				if (x < minx)
+					minx = x;
+				if (x > maxx)
+					maxx = x;
+				if (y < miny)
+					miny = y;
+				if (y > maxy)
+					maxy = y;
+			}
 		}
 
-		bitmap = new BufferedImage(800, 800, BufferedImage.TYPE_INT_ARGB);
+		bitmap = new BufferedImage(XSIZE, YSIZE, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2 = (Graphics2D) bitmap.getGraphics();
 		g2.setColor(Color.white);
 		g2.fillRect(0, 0, XSIZE, YSIZE);
-		g2.setColor(Color.black);
-		int m = Math.max(ydata1.length, ydata2.length);
-		for (int i = 0; i < m - 1; i++) {
-			g2.setColor(Color.red);
-			if (i + 1 < xdata1.length)
-				g2.draw(new Line2D.Float(xpix(xdata1[i],minx,maxx), ypix(ydata1[i],miny,maxy), xpix(xdata1[i + 1],minx,maxx), ypix(ydata1[i + 1],miny,maxy)));
-			g2.setColor(Color.blue);
-			if (i + 1 < xdata2.length)
-				g2.draw(new Line2D.Float(xpix(xdata2[i],minx2,maxx2), ypix(ydata2[i],miny2,maxy2), xpix(xdata2[i + 1],minx2,maxx2), ypix(ydata2[i + 1],miny2,maxy2)));
-			g2.setColor(Color.green);
-			if (i + 1 < ratios.length)
-				g2.draw(new Line2D.Float(xpix(xdata1[i],minx,maxx), ypix(ratios[i],ratiosmin,ratiosmax), xpix(xdata1[i + 1],minx,maxx), ypix(ratios[i + 1],ratiosmin,ratiosmax)));
+		for (int i = 0; i < data.length; i++) {
+			g2.setColor(colors[i]);
+			for (int j = 0; j < data[i][0].length - 1; j++) {
+				g2.draw(new Line2D.Float(xpix(data[i][0][j]), ypix(data[i][1][j]), xpix(data[i][0][j + 1]), ypix(data[i][1][j + 1])));
+			}
 		}
 	}
 
-	private float xpix(float x, float min_x, float max_x) {
-		return XSIZE * (x - min_x) / (max_x - min_x);
+	private float xpix(float x) {
+		return XSIZE * (x - minx) / (maxx - minx);
 	}
 
-	private float ypix(float y, float min_y, float max_y) {
-		return YSIZE * (1 - (y - min_y) / (max_y - min_y));
+	private float ypix(float y) {
+		return YSIZE * (1 - (y - miny) / (maxy - miny));
 	}
 
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		g.drawImage(bitmap, 0, 0, null);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent ae) {
+		switch (ae.getActionCommand()) {
+		case "Next":
+			//TODO stuff...
+			System.out.println("Next");
+			break;
+		case "Previous":
+			//TODO stuff...
+			System.out.println("Previous");
+			break;
+		}
 	}
 }
