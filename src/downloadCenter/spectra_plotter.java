@@ -28,6 +28,8 @@ public class spectra_plotter extends JComponent implements ActionListener {
 
 	private static final int YSIZE = 400;
 	private static final int XSIZE = 800;
+	private static final float XDIV = 10;
+	private static final float YDIV = 10;
 	private float minx;
 	private float maxx;
 	private float miny;
@@ -126,6 +128,15 @@ public class spectra_plotter extends JComponent implements ActionListener {
 			for (int j = 0; j < data[i][0].length - 1; j++) {
 				g2.draw(new Line2D.Float(xpix(data[i][0][j]), ypix(data[i][1][j]), xpix(data[i][0][j + 1]), ypix(data[i][1][j + 1])));
 			}
+		}
+		g2.setColor(Color.black);
+		g2.drawLine(0, YSIZE - 1, XSIZE - 1, YSIZE - 1);
+		g2.drawLine(0, 0, 0, YSIZE - 1);
+		for (int i = 1; i < XDIV; i++) {
+			g2.draw(new Line2D.Float(i * XSIZE / XDIV, YSIZE - 1, i * XSIZE / XDIV, YSIZE - 11));
+			g2.drawString(String.format("%01.5f",((maxx-minx)/XDIV * i)),i * XSIZE / XDIV,YSIZE - 11);
+			g2.draw(new Line2D.Float(0, i * YSIZE / YDIV, 10, i * YSIZE / YDIV));
+			g2.drawString(String.format("%01.5f",((maxy-miny)/YDIV * i)),10,YSIZE - i * YSIZE / YDIV);
 		}
 	}
 
