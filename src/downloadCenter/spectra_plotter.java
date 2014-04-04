@@ -133,10 +133,14 @@ public class spectra_plotter extends JComponent implements ActionListener {
 		g2.drawLine(0, YSIZE - 1, XSIZE - 1, YSIZE - 1);
 		g2.drawLine(0, 0, 0, YSIZE - 1);
 		for (int i = 1; i < XDIV; i++) {
-			g2.draw(new Line2D.Float(i * XSIZE / XDIV, YSIZE - 1, i * XSIZE / XDIV, YSIZE - 11));
-			g2.drawString(String.format("%01.5f",((maxx-minx)/XDIV * i)),i * XSIZE / XDIV,YSIZE - 11);
-			g2.draw(new Line2D.Float(0, i * YSIZE / YDIV, 10, i * YSIZE / YDIV));
-			g2.drawString(String.format("%01.5f",((maxy-miny)/YDIV * i)),10,YSIZE - i * YSIZE / YDIV);
+			g2.draw(new Line2D.Float(i * XSIZE / XDIV, YSIZE - 1, i * XSIZE / XDIV, YSIZE - 6));
+			String xlbl = String.format("%01.3f", ((maxx - minx) / XDIV * i));
+			float strwidth = (float) g2.getFontMetrics().getStringBounds(xlbl, g2).getWidth();
+			g2.drawString(xlbl, i * XSIZE / XDIV - strwidth / 2, YSIZE - 11);
+			g2.draw(new Line2D.Float(0, i * YSIZE / YDIV, 5, i * YSIZE / YDIV));
+			String ylbl = String.format("%01.3f", ((maxy - miny) / YDIV * i));
+			float strheight = (float) g2.getFontMetrics().getStringBounds(ylbl, g2).getHeight();
+			g2.drawString(ylbl, 10, YSIZE - i * YSIZE / YDIV + strheight / 2);
 		}
 	}
 
