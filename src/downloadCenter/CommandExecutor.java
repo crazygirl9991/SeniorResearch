@@ -2,10 +2,14 @@ package downloadCenter;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -26,26 +30,13 @@ public class CommandExecutor {
 	 */
 	public static void wget(ArrayList<String> getUrls, String destinationDirectory) throws UnsupportedOperationException {
 		try { 
-//			[6:25:32 PM] Leland Machen: import java.io.File;
-//			import java.net.HttpURLConnection;
-//			import java.net.URL;
-//			import java.nio.file.Files;
-//			import java.util.Arrays;
-//			import java.util.List;
-//
-//			public class ReadFiles {
-//
-//			 public static void main(String[] args) throws Exception {
-//			  List<String> names = Arrays.asList("http://i.imgur.com/LxtERwz.jpg");
-//			  for(String name : names)
-//			  {
-//			   URL url = new URL(name);
-//			   HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-//			   Files.copy(connect.getInputStream(),new File("output.jpg").toPath());
-//			  }
-//			 }
-//			}
-			//TODO implement it this way instead of other way
+			for(String str : getUrls) {
+				URL url = new URL(str);
+				HttpURLConnection connect = (HttpURLConnection) url.openConnection();
+				Files.copy( connect.getInputStream(), new File("output.jpg").toPath() );
+			}
+			
+// TODO i think this was mine?
 //			for( String current : getUrls ) {
 //				URL url = new URL(current);
 //				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -53,16 +44,17 @@ public class CommandExecutor {
 //			
 //				InputStream data = connection.getInputStream();
 //			}
+			
 			// "-i" => from specified file, "-N" => turn on time stamping, "-nd" => store all downloaded //
 			// files in current or specified directory with no hierarchies, "-P" => specifies a destination directory //
-			String wgetFilePath = "wgetDownloadUrls.lis";
-			writeFile(wgetFilePath, getUrls);
-			
-			String command = "wget -nd -N -i " + wgetFilePath + " -P " + destinationDirectory;
-			Runtime runtime = Runtime.getRuntime();
-			runtime.exec(command);
-			
-			remove(wgetFilePath);
+//			String wgetFilePath = "wgetDownloadUrls.lis";
+//			writeFile(wgetFilePath, getUrls);
+//			
+//			String command = "wget -nd -N -i " + wgetFilePath + " -P " + destinationDirectory;
+//			Runtime runtime = Runtime.getRuntime();
+//			runtime.exec(command);
+//			
+//			remove(wgetFilePath);
 		} catch (Exception e) {
 			throw ( new UnsupportedOperationException("ERROR: Can't convert file to WGET required formatting.", e) );
 		}
