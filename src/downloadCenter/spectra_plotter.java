@@ -22,6 +22,7 @@ import javax.swing.JPanel;
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
+import nom.tam.fits.Header;
 
 @SuppressWarnings("serial")
 public class spectra_plotter extends JComponent implements ActionListener {
@@ -37,22 +38,27 @@ public class spectra_plotter extends JComponent implements ActionListener {
 	private BufferedImage bitmap;
 
 	public static void main(String[] args) throws Exception {
-		float[][] flux = readFitFile("python_code", "spSpec-53847-2235-179.fit");
-		float[][] flux2 = readFitFile("python_code", "spSpec-53729-2236-303.fit");
-		int n = Math.min(flux[0].length, flux2[0].length);
-		float[][] ratios = new float[2][n];
+		spectra_data flux = readFitFile("python_code", "spSpec-53847-2235-179.fit");
+		flux.color = Color.red;
+		spectra_data flux2 = readFitFile("python_code", "spSpec-53729-2236-303.fit");
+		flux2.color = Color.blue;
+		int n = Math.min(flux.xdata.length, flux2.xdata.length);
+		spectra_data ratios = new spectra_data();
+		ratios.color = Color.green;
+		ratios.xdata = new float[n];
+		ratios.ydata = new float[n];
 		for (int i = 0; i < n; i++) {
-			ratios[0][i] = flux[0][i];
-			ratios[1][i] = flux[1][i] / flux2[1][i];
+			ratios.xdata[i] = flux.xdata[i];
+			ratios.ydata[i] = flux.ydata[i] / flux2.ydata[i];
 		}
 		JFrame frame = new JFrame("Spectra Plotter");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Container content = frame.getContentPane();
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		spectra_plotter plot = new spectra_plotter(new float[][][] { flux, flux2 }, new Color[] { Color.red, Color.blue });
+		spectra_plotter plot = new spectra_plotter(new spectra_data[] { flux, flux2 });
 		panel.add(plot);
-		spectra_plotter plot2 = new spectra_plotter(new float[][][] { ratios }, new Color[] { Color.green });
+		spectra_plotter plot2 = new spectra_plotter(new spectra_data[] { ratios });
 		panel.add(plot2);
 		content.add(panel, BorderLayout.CENTER);
 		JPanel bottom = new JPanel();
@@ -63,51 +69,53 @@ public class spectra_plotter extends JComponent implements ActionListener {
 		bottom.add(previous);
 		bottom.add(next);
 		content.add(bottom, BorderLayout.SOUTH);
+		JPanel right = new JPanel();
+		right.setLayout(new BoxLayout(right,BoxLayout.Y_AXIS));
+		right.add(flux.getPanel());
+		right.add(flux2.getPanel());
+		frame.add(right,BorderLayout.EAST);
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 	}
 
-	public static float[][] readFitFile(String workingDirectory, String file) throws FitsException, IOException {
+	public static spectra_data readFitFile(String workingDirectory, String file) throws FitsException, IOException {
 		Fits fitFileImport = new Fits(new File(workingDirectory, file));
 
 		BasicHDU spectra = fitFileImport.getHDU(0);
 
-		double c0 = spectra.getHeader().getDoubleValue("COEFF0");
-		double c1 = spectra.getHeader().getDoubleValue("COEFF1");
+		Header header = spectra.getHeader();
 
-		float[] flux = ((float[][]) spectra.getData().getData())[0];
+		double c0 = header.getDoubleValue("COEFF0");
+		double c1 = header.getDoubleValue("COEFF1");
 
-		float[] wavelength = new float[flux.length];
+		spectra_data ret_data = new spectra_data();
+		ret_data.ra = header.getDoubleValue("RAOBJ");
+		ret_data.dec = header.getDoubleValue("DECOBJ");
+		ret_data.mjd = header.getIntValue("MJD");
+		ret_data.plateid = header.getIntValue("PLATEID");
+		ret_data.fiberid = header.getIntValue("FIBERID");
 
-		for (int i = 0; i < wavelength.length; i++)
-			wavelength[i] = (float) Math.pow(10, c0 + c1 * i);
+		ret_data.ydata = ((float[][]) spectra.getData().getData())[0];
 
-		float[] extrema = new float[] { wavelength[0], wavelength[0], flux[0], flux[0] };
+		ret_data.xdata = new float[ret_data.ydata.length];
 
-		for (int i = 0; i < wavelength.length; i++) {
-			if (wavelength[i] < extrema[0])
-				extrema[0] = wavelength[i];
-			if (wavelength[i] > extrema[1])
-				extrema[1] = wavelength[i];
-			if (flux[i] < extrema[2])
-				extrema[2] = flux[i];
-			if (flux[i] > extrema[3])
-				extrema[3] = flux[i];
-		}
-		return new float[][] { wavelength, flux, extrema };
+		for (int i = 0; i < ret_data.xdata.length; i++)
+			ret_data.xdata[i] = (float) Math.pow(10, c0 + c1 * i);
+
+		return ret_data;
 	}
 
-	public spectra_plotter(float[][][] data, Color[] colors) {
+	public spectra_plotter(spectra_data[] spectra_datas) {
 		setPreferredSize(new Dimension(XSIZE, YSIZE));
-		minx = data[0][0][0];
-		maxx = data[0][0][0];
-		miny = data[0][1][0];
-		maxy = data[0][1][0];
-		for (int i = 0; i < data.length; i++) {
-			for (int j = 0; j < data[i][0].length; j++) {
-				float x = data[i][0][j];
-				float y = data[i][1][j];
+		minx = spectra_datas[0].xdata[0];
+		maxx = spectra_datas[0].xdata[0];
+		miny = spectra_datas[0].ydata[0];
+		maxy = spectra_datas[0].ydata[0];
+		for (int i = 0; i < spectra_datas.length; i++) {
+			for (int j = 0; j < spectra_datas[i].xdata.length; j++) {
+				float x = spectra_datas[i].xdata[j];
+				float y = spectra_datas[i].ydata[j];
 				if (x < minx)
 					minx = x;
 				if (x > maxx)
@@ -123,10 +131,10 @@ public class spectra_plotter extends JComponent implements ActionListener {
 		Graphics2D g2 = (Graphics2D) bitmap.getGraphics();
 		g2.setColor(Color.white);
 		g2.fillRect(0, 0, XSIZE, YSIZE);
-		for (int i = 0; i < data.length; i++) {
-			g2.setColor(colors[i]);
-			for (int j = 0; j < data[i][0].length - 1; j++) {
-				g2.draw(new Line2D.Float(xpix(data[i][0][j]), ypix(data[i][1][j]), xpix(data[i][0][j + 1]), ypix(data[i][1][j + 1])));
+		for (int i = 0; i < spectra_datas.length; i++) {
+			g2.setColor(spectra_datas[i].color);
+			for (int j = 0; j < spectra_datas[i].xdata.length - 1; j++) {
+				g2.draw(new Line2D.Float(xpix(spectra_datas[i].xdata[j]), ypix(spectra_datas[i].ydata[j]), xpix(spectra_datas[i].xdata[j + 1]), ypix(spectra_datas[i].ydata[j + 1])));
 			}
 		}
 		g2.setColor(Color.black);
