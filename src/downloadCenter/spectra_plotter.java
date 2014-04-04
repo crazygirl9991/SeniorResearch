@@ -39,8 +39,8 @@ public class spectra_plotter extends JComponent {
 	private float ratiosmin;
 	private float ratiosmax;
 	public static void main(String[] args) throws Exception {
-		float[][] flux = readFitFile("python_code", "spSpec-53166-1615-513.fit");
-		float[][] flux2 = readFitFile("python_code", "spSpec-53741-2366-367.fit");
+		float[][] flux = readFitFile("python_code", "spSpec-53847-2235-179.fit");
+		float[][] flux2 = readFitFile("python_code", "spSpec-53729-2236-303.fit");
 
 		JFrame frame = new JFrame("Spectra Plotter");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
