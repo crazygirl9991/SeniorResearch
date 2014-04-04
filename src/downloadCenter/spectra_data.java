@@ -17,6 +17,8 @@ public class spectra_data {
 	Color color;
 
 	public JPanel getPanel() {
+		// create the legend with a label and field for each attribute and color them
+		// ... this would have been a good place to use inflection...but oh well...already typed it out
 		JPanel ret_panel = new JPanel(new GridLayout(5, 2));
 		JLabel lblRA = new JLabel("RA:");
 		lblRA.setForeground(color);
