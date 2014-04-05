@@ -1,5 +1,6 @@
 package downloadCenter;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -13,19 +14,19 @@ import nom.tam.fits.*;
 public class FitFileStore {
 	
 	protected ArrayList<String> _downloadUrls = new ArrayList<String>();
-	protected WorkingDirectory _workingDirectory = WorkingDirectory.DOWNLOADS;
+	protected static WorkingDirectory WORKING_DIRECTORY = WorkingDirectory.DOWNLOADS;
 	
 	public FitFileStore() {
-		_workingDirectory.Instantiate();
+		WORKING_DIRECTORY.Instantiate();
 	}
 	
 	public FitFileStore(String inputFileName) {
-		_workingDirectory.Instantiate();
+		WORKING_DIRECTORY.Instantiate();
 		_downloadUrls = CommandExecutor.importFile(inputFileName);
 	}
 	
 	public FitFileStore(int MJD, int plate, int fiber) {
-		_workingDirectory.Instantiate();
+		WORKING_DIRECTORY.Instantiate();
 		_downloadUrls.add( formatPlateInfoToUrl( MJD, plate, fiber ) );
 	}
 	
@@ -34,7 +35,7 @@ public class FitFileStore {
 	 * @param plateInfo
 	 */
 	public FitFileStore(ArrayList< int[] > plateInfo) {
-		_workingDirectory.Instantiate();
+		WORKING_DIRECTORY.Instantiate();
 		
 		for(int i = 0; i < plateInfo.size(); i++) {
 			int[] current = plateInfo.get(i);
@@ -49,7 +50,7 @@ public class FitFileStore {
 	 * @throws IOException
 	 */
 	public void Download() throws IOException {
-		CommandExecutor.wget( _downloadUrls, _workingDirectory.toString() );
+		CommandExecutor.wget( _downloadUrls, WORKING_DIRECTORY.toString() );
 	}
 	
 	/**
@@ -62,7 +63,7 @@ public class FitFileStore {
 	 */
 	public void UpdateTable() throws Exception {
 		for( String current : _downloadUrls ) {
-			TableElement element = parseFitFile(current);
+			TableElement element = ParseFitFile(current);
 			TableManager.SaveToTable(element);
 		}
 	}
@@ -76,20 +77,23 @@ public class FitFileStore {
 
 	 * @return
 	 */
-	public TableElement parseFitFile(String uneditedFileURL) throws IOException {
+	public static TableElement ParseFitFile(String uneditedFileURL) throws IOException {
 		// remove the URL for WGET command from the filename //
 		String spectrumFileName = "";
 		int indexOfSlash = uneditedFileURL.lastIndexOf("/");
 		
-		if( indexOfSlash > 0 ) {
+		Boolean needSpectrum = true; //TODO this isn't supposed to be hard-coded
+		
+		if( indexOfSlash > 0 )
 			spectrumFileName = uneditedFileURL.substring( indexOfSlash+1 );
-		}
+		else
+			spectrumFileName = uneditedFileURL;
 		
 		// then read in the fits file and extract the plate and coordinate information from the header //
 		TableElement element = new TableElement(spectrumFileName);
 		
 		try {
-			Fits fitFileImport = new Fits(_workingDirectory + spectrumFileName);
+			Fits fitFileImport = new Fits( new File(WORKING_DIRECTORY.toString(), spectrumFileName) );
 			Header header =  fitFileImport.getHDU(0).getHeader();
 			
 			double[] coords = {0,0};
@@ -106,6 +110,26 @@ public class FitFileStore {
 			
 			element.setCoords(coords);
 			element.setPlateInfo(plateInfo);
+			
+			if( needSpectrum ) {
+				BasicHDU spectralDataHeader = fitFileImport.getHDU(0);
+				
+				// read these two coefficients from the header
+				double c0 = header.getDoubleValue("COEFF0");
+				double c1 = header.getDoubleValue("COEFF1");
+				
+				float[] dataX, dataY;
+				
+				// read in the flux data
+				dataY = ( (float[][]) spectralDataHeader.getData().getData() )[0];
+
+				// generate the wavelength data
+				dataX = new float[dataY.length];
+				for (int i = 0; i < dataX.length; i++)
+					dataX[i] = (float) Math.pow(10, (c0 + c1*i) );
+				
+				element.setSpectrumData(dataX, dataY);
+			}
 
 		} catch (Exception e) {
 			throw (new IOException("Could not read in data for fit file: " + spectrumFileName, e) );
@@ -116,8 +140,8 @@ public class FitFileStore {
 	
 	public ArrayList<String> getDownloadUrls() { return _downloadUrls; }
 	
-	public WorkingDirectory getWorkingDir() { return _workingDirectory; }
-	public void setWorkingDir(WorkingDirectory wd) { _workingDirectory = wd; }
+	public WorkingDirectory getWorkingDir() { return WORKING_DIRECTORY; }
+	public void setWorkingDir(WorkingDirectory wd) { WORKING_DIRECTORY = wd; }
 	
 	/**
 	 * Takes in MJD, plate, fiber and returns the formatted URL as needed for downloading files from SDSS.

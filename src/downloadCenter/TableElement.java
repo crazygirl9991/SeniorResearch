@@ -1,5 +1,6 @@
 package downloadCenter;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,11 @@ public class TableElement {
 	private String _filename;
 	private double[] _coords = {1, 0, 0}; // spherical { rho, theta, phi }
 	private int[] _plateInfo = {0, 0, 0};
+	
+	// These are only used when plotting the spectrum
+	private float[] _dataX;
+	private float[] _dataY;
+	private Color _color; // TODO auto-color based on the existence of matches??
 	
 	/* SciencePrimary category will have a 0 if there 
 	  * is another spectrum of the same object with better 
@@ -41,7 +47,7 @@ public class TableElement {
 	public double[] getCoords() { return _coords; }
 
 	/**
-	 * Takes an string formatted as "RA,Dec".
+	 * Takes a string formatted as "RA,Dec".
 	 * @param undelimited
 	 * @throws UnsupportedOperationException
 	 */
@@ -155,6 +161,17 @@ public class TableElement {
 		}
 	}
 	
+	public float[] getSpectrumDataX() { return _dataX; }
+	public float[] getSpectrumDataY() { return _dataY; }
+	
+	public void setSpectrumData(float[] dataX, float[] dataY) {
+		_dataX = dataX;
+		_dataY = dataY;
+	}
+	
+	public Color getColor() { return _color; }
+	public void setColor(Color color) { _color = color; }
+	
 	/**
 	 * Returns true if there is a match on record for given table element.
 	 */
@@ -236,7 +253,6 @@ public class TableElement {
 			str += Utility.toString(lis, _matches);
 		}
 		
-		//str += "\n";
 		return str;
 	}
 	

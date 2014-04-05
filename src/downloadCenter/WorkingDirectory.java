@@ -7,7 +7,7 @@ package downloadCenter;
  *
  */
 public enum WorkingDirectory {
-	DOWNLOADS("downloads/"),
+	DOWNLOADS("/downloads/"),
 	UNKNOWN("./"),
 	STUB("stub/");
 	
