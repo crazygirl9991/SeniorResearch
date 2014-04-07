@@ -6,6 +6,7 @@ import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -13,7 +14,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -25,8 +25,8 @@ import javax.swing.event.ChangeListener;
  */
 public class DisplayFrame implements ActionListener, ChangeListener {
 	FitFileStore fileStore = new FitFileStore();
-	private SpectrumPlotter plot1;
-	private SpectrumPlotter plot2;
+	private static SpectrumPlotter plot1;
+	private static SpectrumPlotter plot2;
 
 	/**
 	 * TODO
@@ -35,10 +35,8 @@ public class DisplayFrame implements ActionListener, ChangeListener {
 	 */
 	public void display() throws Exception {
 		// Read in the data from each fit file
-		TableElement te1 = FitFileStore
-				.ParseFitFile("spSpec-53847-2235-179.fit");
-		TableElement te2 = FitFileStore
-				.ParseFitFile("spSpec-53729-2236-303.fit");
+		TableElement te1 = FitFileStore.ParseFitFile("spSpec-53847-2235-179.fit");
+		TableElement te2 = FitFileStore.ParseFitFile("spSpec-53729-2236-303.fit");
 
 		// Create and setup a JFrame
 		JFrame frame = new JFrame("Spectra Plotter");
@@ -52,8 +50,7 @@ public class DisplayFrame implements ActionListener, ChangeListener {
 		plot1 = new SpectrumPlotter(new TableElement[] { te1, te2 });
 		panel.add(plot1);
 
-		plot2 = new SpectrumPlotter(new TableElement[] { calculateRatio(te1,
-				te2) });
+		plot2 = new SpectrumPlotter(new TableElement[] { calculateRatio(te1, te2) });
 		panel.add(plot2);
 		content.add(panel, BorderLayout.CENTER);
 
@@ -83,23 +80,22 @@ public class DisplayFrame implements ActionListener, ChangeListener {
 		frame.setVisible(true);
 	}
 
-	private TableElement calculateRatio(TableElement element1,
-			TableElement element2) {
+	private TableElement calculateRatio(TableElement element1, TableElement element2) {
 		TableElement ratio = new TableElement();
 
+		int offset = Arrays.binarySearch(element2.getSpectrumDataX(),element1.getSpectrumDataX()[0]);
+		
 		// If the data are different lengths then use the minimum for computing
-		// the ratios
-		int n = Math.min(element1.getSpectrumDataX().length,
-				element2.getSpectrumDataX().length);
-
+		// the ratios		
+		int n = Math.min(element1.getSpectrumDataX().length, element2.getSpectrumDataX().length-offset);
+		
 		float[] ratioX = new float[n];
 		float[] ratioY = new float[n];
 		for (int i = 0; i < n; i++) {
 			ratioX[i] = element1.getSpectrumDataX()[i];
 
 			// Divide each y value by the other corresponding one
-			ratioY[i] = element1.getSpectrumDataY()[i]
-					/ element2.getSpectrumDataY()[i];
+			ratioY[i] = element1.getSpectrumDataY()[i] / element2.getSpectrumDataY()[i+offset];
 		}
 
 		ratio.setSpectrumData(ratioX, ratioY);
@@ -149,8 +145,7 @@ public class DisplayFrame implements ActionListener, ChangeListener {
 		lblPLATEID.setForeground(color);
 		panel.add(lblPLATEID);
 
-		JLabel lblplateid = new JLabel(
-				Integer.toString(element.getPlateInfo()[1]));
+		JLabel lblplateid = new JLabel(Integer.toString(element.getPlateInfo()[1]));
 		lblplateid.setForeground(color);
 		panel.add(lblplateid);
 
@@ -158,8 +153,7 @@ public class DisplayFrame implements ActionListener, ChangeListener {
 		lblFIBERID.setForeground(color);
 		panel.add(lblFIBERID);
 
-		JLabel lblfiberid = new JLabel(
-				Integer.toString(element.getPlateInfo()[2]));
+		JLabel lblfiberid = new JLabel(Integer.toString(element.getPlateInfo()[2]));
 		lblfiberid.setForeground(color);
 		panel.add(lblfiberid);
 
@@ -184,9 +178,19 @@ public class DisplayFrame implements ActionListener, ChangeListener {
 	public void stateChanged(ChangeEvent ce) {
 		JCheckBox smoothed = (JCheckBox) ce.getSource();
 		SpectrumPlotter.setSmoothed(smoothed.isSelected());
+		redrawBothPlots();
+	}
+	
+	public static void redrawBothPlots()
+	{
 		plot1.redraw();
 		plot2.redraw();
-		SwingUtilities.windowForComponent(smoothed).repaint();
+	}
+	
+	public static void repaintBothPlots()
+	{
+		plot1.repaint();
+		plot2.repaint();
 	}
 
 }
