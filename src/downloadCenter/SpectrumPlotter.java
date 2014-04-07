@@ -66,9 +66,9 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 
 	private static boolean smoothdata;
 
-	private ArrayList<ArrayList<Float>> xdata;
+	private ArrayList<ArrayList<Float>> xdata = new ArrayList<ArrayList<Float>>();
 
-	private ArrayList<ArrayList<Float>> ydata;
+	private ArrayList<ArrayList<Float>> ydata = new ArrayList<ArrayList<Float>>();
 
 	public SpectrumPlotter(TableElement[] elements) throws Exception {
 		_elements = elements;
@@ -96,8 +96,9 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		float min_X = _elements[0].getSpectrumDataX()[0];
 		float max_X = min_X;
 		for (int i = 0; i < _elements.length; i++) {
+			float x;
 			for (int j = 0; j < _elements[i].getSpectrumDataX().length; j++) {
-				float x = _elements[i].getSpectrumDataX()[j];
+				x = _elements[i].getSpectrumDataX()[j];
 				if (x < min_X)
 					min_X = x;
 				if (x > max_X)
@@ -161,8 +162,8 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		float minbound = center - (MAXX - MINX) / zoom;
 		float maxbound = center + (MAXX - MINX) / zoom;
 
-		xdata = new ArrayList<ArrayList<Float>>();
-		ydata = new ArrayList<ArrayList<Float>>();
+		xdata.clear();
+		ydata.clear();
 		minX = null;
 		maxX = null;
 		minY = null;
