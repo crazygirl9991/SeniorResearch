@@ -222,7 +222,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		FontMetrics fontMetrics = g2.getFontMetrics();
 		int strheight = fontMetrics.getAscent() - fontMetrics.getDescent();
 		int maxWidth = 0;
-		for (int i = 0; i < DIVISION_Y; i++) {
+		for (int i = 0; i <= DIVISION_Y; i++) {
 			int width = fontMetrics.stringWidth(String.format("%01.3f", minY + ((maxY - minY) / DIVISION_Y * i)));
 			if (width > maxWidth)
 				maxWidth = width;
