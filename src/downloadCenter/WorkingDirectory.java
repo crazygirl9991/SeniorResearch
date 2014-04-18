@@ -14,18 +14,23 @@ public enum WorkingDirectory {
 	private String _workingDirectory = "";
 	
 	WorkingDirectory(String wd) {
-		_workingDirectory = wd;
-	}
-	
-	public void Instantiate() {
 		try {
-			String tempWD = _workingDirectory;
-			this._workingDirectory = CommandExecutor.pwd() + tempWD;
+			_workingDirectory = CommandExecutor.pwd() + wd;
 			CommandExecutor.mkdir(_workingDirectory);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
+//	
+//	public void Instantiate() {
+//		try {
+//			String tempWD = _workingDirectory;
+//			this._workingDirectory = CommandExecutor.pwd() + tempWD;
+//			CommandExecutor.mkdir(_workingDirectory);
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	public String toString() {
 		return _workingDirectory;

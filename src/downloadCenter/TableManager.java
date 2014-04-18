@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -86,67 +85,107 @@ public class TableManager {
 	}
 	
 	/**
-	 * Imports current table, locates matches, and assigns
-	 * uniqueID to this table element. Then updates the table.
+	 * TODO
+	 * @return
+	 * @throws Exception
 	 */
-	public static void SaveToTable(TableElement element) throws Exception {
-		List<TableElement> table = new ArrayList<TableElement>();
-		String backup = makeBackup();
-		
+	private static ArrayList<TableElement> importTable() throws Exception {
+		ArrayList<TableElement> table = new ArrayList<TableElement>();
+		Scanner scanner;
+	
 		try {
-			Scanner scanner = new Scanner( new FileReader(TABLE_NAME) );
-			
-			//TODO implement improved match algorithm
+			scanner = new Scanner( new FileReader(TABLE_NAME) );
+		
 			while( scanner.hasNextLine() ) {
 				String nextLine = scanner.nextLine();
 				if( !nextLine.startsWith("#") && !nextLine.equals("") ) {
-					TableElement that = element.parse(nextLine);
-			//TODO TODO prevent duplicate files from being written to the table!!
-					if( element.isMatch(that) )
-						element.addMatch( that.getUniqueID() );
-			
-					table.add(that); // add current table element to list for pending updates
+					TableElement that = TableElement.parse(nextLine);
+					table.add(that);
 				}
 			}
 			
 			scanner.close();
+		} catch(FileNotFoundException f) {
+			throw f;
+		}
+		
+		return table;
+	}
+	
+
+	/**
+	 * TODO
+	 * 
+	 * @param filename
+	 * @param data
+	 */
+	private static void writeTable(ArrayList<TableElement> table) throws Exception {
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(TABLE_NAME));
+
+			writer.write(FILE_HEADER);
+			for (TableElement current : table)
+				writer.write( current.toString() );
+
+			writer.close();
+		} catch (Exception e) {
+			throw (new UnsupportedOperationException("ERROR: Could not write updated data to table: " + TABLE_NAME, e));
+		}
+	}
+	
+	/**
+	 * TODO
+	 * @return
+	 */
+	public static String[] getDisplay() {
+		String[] tableArray;
+		try {
+			ArrayList<TableElement> table = importTable();
+			tableArray = new String[table.size()];
+			for(int i = 0; i < table.size(); i++)
+				tableArray[i] = table.get(i).toString();
+		
+		} catch (FileNotFoundException f) {
+			tableArray = new String[1];
 			
-			//TODO move this down outside of try or something this is broken you're dumb
+			tableArray[0] = "File not found: " + TABLE_NAME + " does not exist. Have any files been downloaded yet?";
+		} catch (Exception e) {
+			e.printStackTrace();
 			
-			/* now that we have imported everything, we know what the uniqueID of the latest
-			 * table element is going to be. Here we set that, and append this element to the table.
-			 */
+			tableArray = new String[1];
+		}
+		
+		return tableArray;
+	}
+	
+	/**
+	 * Imports current table, locates matches, and assigns
+	 * uniqueID to this table element. Then updates the table.
+	 */
+	public static void SaveToTable(TableElement element) throws Exception {
+		String backup = makeBackup();
+		
+		try {			
+			ArrayList<TableElement> table = importTable();
+			//TODO implement improved match algorithm
+			//TODO TODO prevent duplicate files from being written to the table!!
 			element.setUniqueID( table.size() );
+			
+			for(TableElement that : table) {
+				if( element.isMatch(that) ) { 
+					element.addMatch(that);
+					that.addMatch(element);
+				}
+			}
+		
 			table.add(element);
 			
-			// update already existing elements with the uniqueID of this within our list
-			for(int i = 0; i < element.getMatches().size(); i++) { 
-				// the indexes to modify are stored in the _matches list
-				int index = element.getMatches().get(i);
-				table.get(index).addMatch( element.getUniqueID() );
-			}
-			
+			writeTable(table);
 		} catch(FileNotFoundException f) {
 			CommandExecutor.createFile(TABLE_NAME);
 		} catch(Exception e) {
 			restore(backup);
-			throw ( new IOException("ERROR: Could not read table data.", e) );
-		}
-		
-		try {//TODO extract this into ce?
-			// and then push these changes back into the table
-			BufferedWriter writer = new BufferedWriter( new FileWriter(TABLE_NAME) );
-			writer.write(FILE_HEADER);
-			for(int i = 0; i < table.size(); i++)
-				writer.write( table.get(i).toString() );
-			
-			writer.close();
-		} catch(Exception e) {
-			restore(backup);
-			throw ( new IOException("ERROR: Could not write updated data to file " + TABLE_NAME, e) );
-		}
+			throw ( new IOException("ERROR: Table IOS failed.", e) );
+		}	
 	}
-	
-	
-	
 }

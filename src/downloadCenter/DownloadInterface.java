@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * @author victoria
  *
  */
-public class DownloadCenter {
+public class DownloadInterface {
 	public static double _plateOverlapThreshold = 2.98; // degrees - diameter of each plate
 	
 	public static void main(String args[]) {
@@ -17,7 +17,8 @@ public class DownloadCenter {
 		double[] coords3 = {1, 188.062, 27.4019};
 		double[] coords4 = {1, 189.767, 27.4614};
 		 
-		int FIBERS = 640;
+		int FIBERS = 640;// so this is for SDSS I & II
+		int FIBERS1 = 1000; // this SDSS III, MJD > 55000
 		
 		// Radius = 1 (unit circle), RA [[hours]], Dec [[degrees]] are spherical
 		double angularDistance1 = Math.acos( Utility.dot( Utility.toCartesian(coords1), Utility.toCartesian(coords2) ) );
@@ -45,8 +46,8 @@ public class DownloadCenter {
 			}
 		
 			try {
-//				FitFileStore store = new FitFileStore(downloadList);
-//			
+				//FitFileStore store = new FitFileStore(downloadList);
+			
 //				store.Download();
 //				store.UpdateTable();
 			} catch (Exception e) {

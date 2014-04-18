@@ -3,11 +3,13 @@ package downloadCenter;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.StandardCopyOption;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -34,35 +36,18 @@ public class CommandExecutor {
 	 *            if necessary).
 	 * @throws IOException
 	 */
-	public static void wget(ArrayList<String> getUrls, String destinationDirectory) throws UnsupportedOperationException {
+	public static void get(ArrayList<String> getUrls, String destinationDirectory) throws UnsupportedOperationException {
 		try {
 			for (String str : getUrls) {
 				URL url = new URL(str);
 				HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-				Files.copy(connect.getInputStream(), new File(destinationDirectory, str.substring(str.lastIndexOf("/")+1)).toPath());
+				Files.copy(connect.getInputStream(), new File(destinationDirectory, 
+						str.substring(str.lastIndexOf("/")+1)).toPath(), StandardCopyOption.REPLACE_EXISTING);
 			}
-
-			// TODO i think this was mine?
-			//			for( String current : getUrls ) {
-			//				URL url = new URL(current);
-			//				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			//				connection.setRequestMethod("GET");
-			//			
-			//				InputStream data = connection.getInputStream();
-			//			}
-
-			// "-i" => from specified file, "-N" => turn on time stamping, "-nd" => store all downloaded //
-			// files in current or specified directory with no hierarchies, "-P" => specifies a destination directory //
-			//			String wgetFilePath = "wgetDownloadUrls.lis";
-			//			writeFile(wgetFilePath, getUrls);
-			//			
-			//			String command = "wget -nd -N -i " + wgetFilePath + " -P " + destinationDirectory;
-			//			Runtime runtime = Runtime.getRuntime();
-			//			runtime.exec(command);
-			//			
-			//			remove(wgetFilePath);
+		} catch(FileAlreadyExistsException f) {
+			//TODO log
 		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: Can't convert file to WGET required formatting.", e));
+			throw (new UnsupportedOperationException("ERROR: Can't retrieve files.", e));
 		}
 	}
 
@@ -166,25 +151,6 @@ public class CommandExecutor {
 			writer.close();
 		} catch (Exception e) {
 			throw (new UnsupportedOperationException("ERROR: Can't create file: " + filename, e));
-		}
-	}
-
-	/**
-	 * TODO
-	 * 
-	 * @param filename
-	 * @param data
-	 */
-	public static void writeFile(String filename, ArrayList<String> data) {
-		try {
-			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
-			for (String current : data)
-				writer.write(current);
-
-			writer.close();
-		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: Can't write file: " + filename, e));
 		}
 	}
 }

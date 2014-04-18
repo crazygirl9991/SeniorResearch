@@ -18,34 +18,33 @@ public class FitFileStore {
 	protected ArrayList<String> _downloadUrls = new ArrayList<String>();
 	protected static WorkingDirectory WORKING_DIRECTORY = WorkingDirectory.DOWNLOADS;
 
-	public FitFileStore() {
-		WORKING_DIRECTORY.Instantiate();
-	}
-
+	public FitFileStore() { }
+	
 	public FitFileStore(String inputFileName) {
-		WORKING_DIRECTORY.Instantiate();
 		_downloadUrls = CommandExecutor.importFile(inputFileName);
 	}
 
 	public FitFileStore(int MJD, int plate, int fiber) {
-		WORKING_DIRECTORY.Instantiate();
 		_downloadUrls.add(formatPlateInfoToUrl(MJD, plate, fiber));
 	}
 
 	/**
-	 * The int array parameters should contain exactly 3 elements: {MJD, Plate,
-	 * Fiber}.
-	 * 
+	 * TODO
 	 * @param plateInfo
 	 */
-	public FitFileStore(ArrayList<int[]> plateInfo) {
-		WORKING_DIRECTORY.Instantiate();
-
-		for (int i = 0; i < plateInfo.size(); i++) {
-			int[] current = plateInfo.get(i);
-			if (current.length == 3)
-				_downloadUrls.add(formatPlateInfoToUrl(current[0], current[1], current[2]));
-		}
+	public FitFileStore(int[] plateInfo) {
+		if(plateInfo[2] == 0) {
+			int FIBERS;
+			
+			if( plateInfo[0] <= 55000 )
+				FIBERS = 640; // SDSS I & II (before MJD = 55000) had 640 fibers per plate
+			else
+				FIBERS = 1000; // SDSS III had 1000 fibers per plate
+			
+			for (int i = 100; i <= FIBERS; i++) //TODO fibers start where?
+				_downloadUrls.add( formatPlateInfoToUrl(plateInfo[0], plateInfo[1], i) );
+		} else
+			_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], plateInfo[2]));
 	}
 
 	/**
@@ -55,8 +54,14 @@ public class FitFileStore {
 	 * 
 	 * @throws IOException
 	 */
-	public void Download() throws IOException {
-		CommandExecutor.wget(_downloadUrls, WORKING_DIRECTORY.toString());
+	public Boolean Download() throws IOException {
+		try {
+			CommandExecutor.get(_downloadUrls, WORKING_DIRECTORY.toString());
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**

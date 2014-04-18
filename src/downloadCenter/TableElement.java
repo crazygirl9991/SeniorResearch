@@ -13,7 +13,7 @@ import java.util.List;
 public class TableElement {
 	private int _uniqueID; // not assigned until added to the table
 	private String _filename;
-	private double[] _coords = {1, 0, 0}; // spherical { rho, theta, phi }
+	private double[] _coords = {0, 0}; // spherical { rho, theta, phi }
 	private int[] _plateInfo = {0, 0, 0};
 	
 	// These are only used when plotting the spectrum
@@ -58,43 +58,39 @@ public class TableElement {
 			String[] coords = undelimited.split(TableManager.LIST_DELIMITER);
 		
 			try {
-				if( coords.length == 2 ) {
-					_coords[0] = 1.0;
-					_coords[1] = Double.parseDouble( coords[0].trim() );
-					_coords[2] = Double.parseDouble( coords[1].trim() );
-				} else if( coords.length == 3 ) {
-					_coords[0] = Double.parseDouble( coords[0].trim() );
-					_coords[1] = Double.parseDouble( coords[1].trim() );
-					_coords[2] = Double.parseDouble( coords[2].trim() );
-				} else {
+				if(coords.length == 2) {
+					double tmp0 = Double.parseDouble( coords[0].trim() );
+					double tmp1 = Double.parseDouble( coords[1].trim() );
+				
+					setCoords(tmp0, tmp1);
+				} else
 					throw (new UnsupportedOperationException(errorMessage) );
-				} 
 			} catch (Exception e) {
 				throw (new UnsupportedOperationException(errorMessage, e) );
 			}
+		}
+	}
+	
+	public void setCoords(double[] coords) throws UnsupportedOperationException {
+		String errorMessage = "There should be 2 elements. Given: " + Utility.toString(TableManager.LIST_DELIMITER, coords);
+		
+		if(coords.length == 2) {
+			setCoords(coords[0], coords[1]);
 		} else {
 			throw (new UnsupportedOperationException(errorMessage) );
 		}
 	}
 	
-	public void setCoords(double[] coords) throws UnsupportedOperationException {
-	String errorMessage = "Please submit coords in the following format: \"RA,Dec\". Given: " + Utility.toString(TableManager.LIST_DELIMITER, coords);
-		
-		try {
-			if( coords.length == 2 ) {
-				_coords[0] = 1.0;
-				_coords[1] = coords[0];
-				_coords[2] = coords[1];
-			} else if( coords.length == 3 ) {
-				_coords[0] = coords[0];
-				_coords[1] = coords[1];
-				_coords[2] = coords[2];
-			} else {
-				throw (new UnsupportedOperationException(errorMessage) );
-			}
-		} catch (Exception e) {
-			throw (new UnsupportedOperationException(errorMessage, e) );
-		}
+	public void setCoords(double ra, double dec) throws UnsupportedOperationException {
+		//String errorMessage = "";
+		//TODO  checks?
+//		if(ra < 0)
+//			errorMessage += "RA = " + ra + " is not valid. ";
+//		if(dec < 0)
+//			errorMessage += "Dec = " + dec + "is not valid. ";
+//		
+		_coords[0] = ra;
+		_coords[1] = dec;
 	}
 	
 	public int[] getPlateInfo() { return _plateInfo; }
@@ -103,41 +99,42 @@ public class TableElement {
 	 * @param undelimited
 	 * @throws UnsupportedOperationException
 	 */
-	public void setPlateInfo(String undelimited) throws UnsupportedOperationException {
+	public void setPlateInfo(String undelimited) throws UnsupportedOperationException {		
 		String errorMessage = "Please submit plate info in the following format: \"MJD,Plate,Fiber\". Given: " + undelimited;
 		
 		if( !undelimited.equals("") ) {
-			String[] plateInfo = undelimited.split(TableManager.LIST_DELIMITER);
-			
 			try {
-				if( plateInfo.length != 3 )
+				String[] plateInfo = undelimited.split(TableManager.LIST_DELIMITER);
+			
+				if(plateInfo.length == 3) {
+					int tmp0 = Integer.parseInt( plateInfo[0].trim() );
+					int tmp1 = Integer.parseInt( plateInfo[1].trim() );
+					int tmp2 = Integer.parseInt( plateInfo[2].trim() );
+			
+					setPlateInfo(tmp0, tmp1, tmp2);
+				} else
 					throw (new UnsupportedOperationException(errorMessage) );
-				else {
-					_plateInfo[0] = Integer.parseInt( plateInfo[0].trim() );
-					_plateInfo[1] = Integer.parseInt( plateInfo[1].trim() );
-					_plateInfo[2] = Integer.parseInt( plateInfo[2].trim() );
-				}
-			}  catch (Exception e) {
-				throw (new UnsupportedOperationException(errorMessage, e) );
+			} catch(Exception e) {
+				throw (new UnsupportedOperationException(errorMessage) );
 			}
 		}
 	}
 	
 	public void setPlateInfo(int[] plateInfo) throws UnsupportedOperationException {
-		String errorMessage = "Please submit plate info in the following format: \"MJD,Plate,Fiber\". Given: " + Utility.toString(TableManager.LIST_DELIMITER, plateInfo);
+		String errorMessage = "There should be 3 elements. Given: " + Utility.toString(TableManager.LIST_DELIMITER, plateInfo);
 			
-			try {
-				if( plateInfo.length != 3 )
-					throw (new UnsupportedOperationException(errorMessage) );
-				else {
-					_plateInfo[0] = plateInfo[0];
-					_plateInfo[1] = plateInfo[1];
-					_plateInfo[2] = plateInfo[2];
-				}
-			} catch (Exception e) {
-				throw (new UnsupportedOperationException(errorMessage, e) );
-			}
+			if( plateInfo.length == 3 )
+				setPlateInfo(plateInfo[0], plateInfo[1], plateInfo[2]);
+			else
+				throw (new UnsupportedOperationException(errorMessage) );
 		}
+	
+	public void setPlateInfo(int mjd, int plate, int fiber) throws UnsupportedOperationException {		
+		//TODO should there be validity checks here?
+		_plateInfo[0] = mjd;
+		_plateInfo[1] = plate;
+		_plateInfo[2] = fiber;
+	}
 	
 	public List<Integer> getMatches() { return _matches; }
 	public void setMatches(String newMatches) throws UnsupportedOperationException { 
@@ -188,8 +185,8 @@ public class TableElement {
 	 * Converts an integer value (meant to be the matching element's
 	 * uniqueID) and adds it to the String of matches store for this element.
 	 */
-	public void addMatch(int match) {
-		_matches.add(match);
+	public void addMatch(TableElement match) {
+		_matches.add( match.getUniqueID() );
 	}
 	
 	/**
@@ -200,9 +197,12 @@ public class TableElement {
 	 * TODO refine this algorithm for matching accuracy
 	 */
 	public Boolean isMatch(TableElement that) throws UnsupportedOperationException {
+		// Radius = 1 (unit circle), RA [[hours]], Dec [[degrees]] are spherical
+		double[] tmp0 = {1.0, this.getCoords()[0], this.getCoords()[1]};
+		double[] tmp1 = {1.0, that.getCoords()[0], that.getCoords()[1]};
+		
 		try {
-			// Radius = 1 (unit circle), RA [[hours]], Dec [[degrees]] are spherical
-			double angularDistance = Math.acos( Utility.dot( Utility.toCartesian( this.getCoords() ), Utility.toCartesian( that.getCoords() ) ) );
+			double angularDistance = Math.acos( Utility.dot( Utility.toCartesian(tmp0), Utility.toCartesian(tmp1) ) );
 		
 			if( angularDistance <= Utility.degreesToRadians(TableManager.DISTANCE_THRESHOLD) )
 				return true;
@@ -217,7 +217,7 @@ public class TableElement {
 	 * Splits input string (meant to be line from table) by delimiter
 	 * and stores those values in returned TableElement.
 	 */
-	public TableElement parse(String str) {
+	public static TableElement parse(String str) {
 		TableElement temp = new TableElement();
 		
 		String[] delim = str.split(TableManager.COLUMN_DELIMITER);
@@ -240,7 +240,7 @@ public class TableElement {
 		String col = TableManager.COLUMN_DELIMITER;
 		String lis = TableManager.LIST_DELIMITER;
 		
-		double[] coords = { _coords[1], _coords[2] }; // no need to output the unit radius of 1
+		double[] coords = { _coords[0], _coords[1] }; // no need to output the unit radius of 1
 		
 		String str = _uniqueID + col + _filename + col + Utility.toString(lis, coords) + col
 				   + Utility.toString(lis, _plateInfo) + col;
