@@ -43,7 +43,12 @@ public enum TextField implements FocusListener {
 	public void populate() { _textField.setText( _textField.getName() ); }
 	public void clear() { _textField.setText(""); }
 	
-	public String getText() { return _textField.getText(); }
+	public String getText() {
+		if(_textField.getText().equals(_textField.getName()))
+			return null;
+		else
+			return _textField.getText();
+	}
 	
 	public String getString() { return _textField.getName(); }
 	

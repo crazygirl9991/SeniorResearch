@@ -3,7 +3,6 @@ package downloadCenter;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.nio.file.StandardCopyOption;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -37,17 +36,19 @@ public class CommandExecutor {
 	 * @throws IOException
 	 */
 	public static void get(ArrayList<String> getUrls, String destinationDirectory) throws UnsupportedOperationException {
-		try {
-			for (String str : getUrls) {
+		for ( String str : getUrls ) {
+			try {
 				URL url = new URL(str);
 				HttpURLConnection connect = (HttpURLConnection) url.openConnection();
 				Files.copy(connect.getInputStream(), new File(destinationDirectory, 
-						str.substring(str.lastIndexOf("/")+1)).toPath(), StandardCopyOption.REPLACE_EXISTING);
-			}
+						str.substring(str.lastIndexOf("/")+1)).toPath()/*, StandardCopyOption.REPLACE_EXISTING*/);
+				connect.disconnect();
+			
 		} catch(FileAlreadyExistsException f) {
 			//TODO log
 		} catch (Exception e) {
 			throw (new UnsupportedOperationException("ERROR: Can't retrieve files.", e));
+			}
 		}
 	}
 

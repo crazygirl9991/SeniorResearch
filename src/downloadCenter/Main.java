@@ -10,15 +10,22 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
-public class Main implements ActionListener {
+public class Main implements ActionListener, DocumentListener {
 	
 	public static final Font FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
 	
 	JFrame _frame = new JFrame("Spectrum Analysis Tool");
+
+	private TableElementModel model;
+
+	private JTable list0;
 	
 	public void Main_Menu() {
 		// Create and setup a JFrame
@@ -43,8 +50,13 @@ public class Main implements ActionListener {
 			panel1.add( TextField.PLATE.getTextField() );
 			panel1.add( TextField.FIBER.getTextField() );
 			
-//			JList<String> list0 = new JList<String>( TableManager.getDisplay() );
-//			panel3.add(list0);
+			for(TextField curr : TextField.values())
+				curr.getTextField().getDocument().addDocumentListener(this);
+			
+			model = new TableElementModel(TableManager.importTable());
+			list0 = new JTable( model );
+			JScrollPane scroll = new JScrollPane(list0);
+			panel3.add(scroll);
 			
 			// Create buttons
 			JButton button0 = new JButton("Download Files");
@@ -134,43 +146,62 @@ public class Main implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		TableElement element = new TableElement();
+//		TableElement element = new TableElement();
 		
-		String invalidCoords = retrieveValidCoords(element); //TODO invalid not working
-		String invalidPlateInfo = retrieveValidPlateInfo(element);
+//		String invalidCoords = retrieveValidCoords(element); //TODO invalid not working
+//		String invalidPlateInfo = retrieveValidPlateInfo(element);
 		
 		switch (event.getActionCommand()) {
-		case "Download Files":
-			if( invalidPlateInfo.equals("none") ) {	
-				try {
-					FitFileStore store = new FitFileStore( element.getPlateInfo() );
-					if( !store.Download() ) {
-						Error_Menu("Could not locate file for download. See log for details.");
-						
-						//TODO make a log
-					}
-					//store.UpdateTable();
-					
-					//Main_Menu();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			} else
-				Error_Menu(invalidPlateInfo);
-			break;
-		case "Review Spectra":	
+//		case "Download Files":
+//			if( invalidPlateInfo.equals("none") ) {	
+//				try {
+//					FitFileStore store = new FitFileStore( element.getPlateInfo() );
+//					if( !store.Download() ) {
+//						Error_Menu("Could not locate file for download. See log for details.");
+//						
+//						//TODO make a log
+//					}
+//					//store.UpdateTable();
+//					
+//					//Main_Menu();
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			} else
+//				Error_Menu(invalidPlateInfo);
+//			break;
+		case "Review Spectra":
+			if ( list0.getSelectedRows().length != 2 )
+				JOptionPane.showMessageDialog( _frame, "Please select 2 spectra to plot them", "Error! Unable to plot", JOptionPane.ERROR_MESSAGE );
+			else {
 //			if( invalidCoords.equals("none") ) {
 //				
 //			} else if( invalidPlateInfo.equals("none") ) {
 //				
 //			}
-			try {
-				PlottingInterface plotUI = new PlottingInterface();
-				plotUI.display("spSpec-53847-2235-179.fit", "spSpec-53729-2236-303.fit");
-			} catch (Exception e) {
-				e.printStackTrace();
+				try {
+					PlottingInterface plotUI = new PlottingInterface();
+					plotUI.display( model.getRow(list0.getSelectedRows()[0]),model.getRow(list0.getSelectedRows()[1]));//"spSpec-53847-2235-179.fit", "spSpec-53729-2236-303.fit" );
+				} catch ( Exception e ) {
+					e.printStackTrace();
+				}
 			}
 			break;
 		}
+	}
+
+	@Override
+	public void changedUpdate(DocumentEvent de) {
+		model.filter(TextField.RA.getText(),TextField.DEC.getText(),TextField.MJD.getText(),TextField.PLATE.getText(),TextField.FIBER.getText());
+	}
+
+	@Override
+	public void insertUpdate(DocumentEvent de) {
+		model.filter(TextField.RA.getText(),TextField.DEC.getText(),TextField.MJD.getText(),TextField.PLATE.getText(),TextField.FIBER.getText());
+	}
+
+	@Override
+	public void removeUpdate(DocumentEvent de) {
+		model.filter(TextField.RA.getText(),TextField.DEC.getText(),TextField.MJD.getText(),TextField.PLATE.getText(),TextField.FIBER.getText());
 	}
 }

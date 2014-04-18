@@ -32,7 +32,8 @@ public class FitFileStore {
 	 * TODO
 	 * @param plateInfo
 	 */
-	public FitFileStore(int[] plateInfo) {
+	public FitFileStore(int[] plateInfo/*ArrayList<int[]> plateInfos*/) {
+//		for(int[] plateInfo : plateInfos){
 		if(plateInfo[2] == 0) {
 			int FIBERS;
 			
@@ -45,7 +46,8 @@ public class FitFileStore {
 				_downloadUrls.add( formatPlateInfoToUrl(plateInfo[0], plateInfo[1], i) );
 		} else
 			_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], plateInfo[2]));
-	}
+		}
+//	}
 
 	/**
 	 * Runs a WGET query with specified "downloads" directory (contained in

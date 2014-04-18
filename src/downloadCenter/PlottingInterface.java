@@ -122,7 +122,7 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 		panel.add(lblRA);
 
 		// Create coordinate labels and retrieve these values
-		JLabel txtRA = new JLabel(Double.toString(element.getCoords()[1]));
+		JLabel txtRA = new JLabel(Double.toString(element.getCoords()[0]));
 		txtRA.setForeground(color);
 		panel.add(txtRA);
 
@@ -130,7 +130,7 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 		lblDEC.setForeground(color);
 		panel.add(lblDEC);
 
-		JLabel lbldec = new JLabel(Double.toString(element.getCoords()[2]));
+		JLabel lbldec = new JLabel(Double.toString(element.getCoords()[1]));
 		lbldec.setForeground(color);
 		panel.add(lbldec);
 

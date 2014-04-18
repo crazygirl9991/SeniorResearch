@@ -89,7 +89,7 @@ public class TableManager {
 	 * @return
 	 * @throws Exception
 	 */
-	private static ArrayList<TableElement> importTable() throws Exception {
+	static ArrayList<TableElement> importTable() throws Exception {
 		ArrayList<TableElement> table = new ArrayList<TableElement>();
 		Scanner scanner;
 	
@@ -125,7 +125,7 @@ public class TableManager {
 
 			writer.write(FILE_HEADER);
 			for (TableElement current : table)
-				writer.write( current.toString() );
+				writer.write( current.toString() +"\n");
 
 			writer.close();
 		} catch (Exception e) {
