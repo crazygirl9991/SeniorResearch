@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -27,6 +28,7 @@ public class Main implements ActionListener, DocumentListener {
 
 	private JTable list0;
 	
+	JCheckBox filter = new JCheckBox("Hide spectra with no matches?",false);
 	public void Main_Menu() {
 		// Create and setup a JFrame
 		_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -50,6 +52,9 @@ public class Main implements ActionListener, DocumentListener {
 			panel1.add( TextField.PLATE.getTextField() );
 			panel1.add( TextField.FIBER.getTextField() );
 			
+			filter.addActionListener(this);
+			filter.setActionCommand("toggle");
+			
 			for(TextField curr : TextField.values())
 				curr.getTextField().getDocument().addDocumentListener(this);
 			
@@ -71,6 +76,7 @@ public class Main implements ActionListener, DocumentListener {
 			// Add everything to the main box layout
 			boxLayout.add(panel0);
 			boxLayout.add(panel1);
+			boxLayout.add(filter);
 			boxLayout.add(panel3);
 			boxLayout.add(panel4);
 			
@@ -187,21 +193,28 @@ public class Main implements ActionListener, DocumentListener {
 				}
 			}
 			break;
+		case "toggle":
+			update();
+			break;
 		}
 	}
 
 	@Override
 	public void changedUpdate(DocumentEvent de) {
-		model.filter(TextField.RA.getText(),TextField.DEC.getText(),TextField.MJD.getText(),TextField.PLATE.getText(),TextField.FIBER.getText());
+		update();
 	}
 
 	@Override
 	public void insertUpdate(DocumentEvent de) {
-		model.filter(TextField.RA.getText(),TextField.DEC.getText(),TextField.MJD.getText(),TextField.PLATE.getText(),TextField.FIBER.getText());
+		update();
 	}
 
 	@Override
 	public void removeUpdate(DocumentEvent de) {
-		model.filter(TextField.RA.getText(),TextField.DEC.getText(),TextField.MJD.getText(),TextField.PLATE.getText(),TextField.FIBER.getText());
+		update();
+	}
+
+	public void update() {
+		model.filter(TextField.RA.getText(),TextField.DEC.getText(),TextField.MJD.getText(),TextField.PLATE.getText(),TextField.FIBER.getText(),filter.isSelected());
 	}
 }

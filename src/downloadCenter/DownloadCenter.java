@@ -45,10 +45,11 @@ public class DownloadCenter {
 			}
 		
 			try {
-//				FitFileStore store = new FitFileStore(downloadList);
-//			
-//				store.Download();
+				FitFileStore store = new FitFileStore(downloadList);
+			
+				store.Download();
 //				store.UpdateTable();
+				TableManager.updateTable();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

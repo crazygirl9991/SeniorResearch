@@ -10,7 +10,7 @@ import java.util.List;
  * @author victoria
  *
  */
-public class TableElement {
+public class TableElement implements Comparable<TableElement> {
 	private int _uniqueID; // not assigned until added to the table
 	private String _filename;
 	private double[] _coords = {0, 0}; // spherical { rho, theta, phi }
@@ -254,6 +254,18 @@ public class TableElement {
 		}
 		
 		return str;
+	}
+
+	@Override
+	public int compareTo(TableElement other) {
+		for(int i = 0; i < _plateInfo.length; i++)
+		{
+			if(_plateInfo[i] > other._plateInfo[i])
+				return 1;
+			else if(_plateInfo[i] < other._plateInfo[i])
+				return -1;
+		}
+		return 0;
 	}
 	
 }

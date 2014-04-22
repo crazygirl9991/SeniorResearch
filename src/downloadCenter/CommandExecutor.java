@@ -12,6 +12,9 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Contains the logic to make changes to the user's system, e.g. by creating or
@@ -33,23 +36,33 @@ public class CommandExecutor {
 	 * @param destinationDirectory
 	 *            - should be an already existing directory (including filepath
 	 *            if necessary).
+	 * @throws InterruptedException
 	 * @throws IOException
 	 */
-	public static void get(ArrayList<String> getUrls, String destinationDirectory) throws UnsupportedOperationException {
-		for ( String str : getUrls ) {
-			try {
-				URL url = new URL(str);
-				HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-				Files.copy(connect.getInputStream(), new File(destinationDirectory, 
-						str.substring(str.lastIndexOf("/")+1)).toPath()/*, StandardCopyOption.REPLACE_EXISTING*/);
-				connect.disconnect();
-			
-		} catch(FileAlreadyExistsException f) {
-			//TODO log
-		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: Can't retrieve files.", e));
-			}
+	public static void get(ArrayList<String> getUrls, final String destinationDirectory) throws Exception {
+		ExecutorService pool = Executors.newFixedThreadPool(30);
+		for (final String str : getUrls) {
+			pool.submit(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						File destination = new File(destinationDirectory, str.substring(str.lastIndexOf("/") + 1));
+						if(destination.exists())
+							return;
+						URL url = new URL(str);
+						HttpURLConnection connect = (HttpURLConnection) url.openConnection();
+						Files.copy(connect.getInputStream(), destination.toPath()); //StandardCopyOption.REPLACE_EXISTING
+						connect.disconnect();
+					} catch (FileAlreadyExistsException f) {
+						//TODO log
+					} catch (Exception e) {
+						throw (new UnsupportedOperationException("ERROR: Can't retrieve files.", e));
+					}
+				}
+			});
 		}
+		pool.shutdown();
+		pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 	}
 
 	/**

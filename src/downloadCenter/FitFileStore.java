@@ -18,8 +18,9 @@ public class FitFileStore {
 	protected ArrayList<String> _downloadUrls = new ArrayList<String>();
 	protected static WorkingDirectory WORKING_DIRECTORY = WorkingDirectory.DOWNLOADS;
 
-	public FitFileStore() { }
-	
+	public FitFileStore() {
+	}
+
 	public FitFileStore(String inputFileName) {
 		_downloadUrls = CommandExecutor.importFile(inputFileName);
 	}
@@ -30,24 +31,42 @@ public class FitFileStore {
 
 	/**
 	 * TODO
+	 * 
 	 * @param plateInfo
 	 */
-	public FitFileStore(int[] plateInfo/*ArrayList<int[]> plateInfos*/) {
-//		for(int[] plateInfo : plateInfos){
-		if(plateInfo[2] == 0) {
+	public FitFileStore(int[] plateInfo) {
+		if (plateInfo[2] == 0) {
 			int FIBERS;
-			
-			if( plateInfo[0] <= 55000 )
+
+			if (plateInfo[0] <= 55000)
 				FIBERS = 640; // SDSS I & II (before MJD = 55000) had 640 fibers per plate
 			else
 				FIBERS = 1000; // SDSS III had 1000 fibers per plate
-			
-			for (int i = 100; i <= FIBERS; i++) //TODO fibers start where?
-				_downloadUrls.add( formatPlateInfoToUrl(plateInfo[0], plateInfo[1], i) );
+
+			for (int i = 100; i <= FIBERS; i++)
+				//TODO fibers start where?
+				_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], i));
 		} else
 			_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], plateInfo[2]));
+	}
+
+	public FitFileStore(ArrayList<int[]> plateInfos) {
+		for (int[] plateInfo : plateInfos) {
+			if (plateInfo[2] == 0) {
+				int FIBERS;
+
+				if (plateInfo[0] <= 55000)
+					FIBERS = 640; // SDSS I & II (before MJD = 55000) had 640 fibers per plate
+				else
+					FIBERS = 1000; // SDSS III had 1000 fibers per plate
+
+				for (int i = 100; i <= FIBERS; i++)
+					//TODO fibers start where?
+					_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], i));
+			} else
+				_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], plateInfo[2]));
 		}
-//	}
+	}
 
 	/**
 	 * Runs a WGET query with specified "downloads" directory (contained in
@@ -60,7 +79,7 @@ public class FitFileStore {
 		try {
 			CommandExecutor.get(_downloadUrls, WORKING_DIRECTORY.toString());
 			return true;
-		} catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -89,18 +108,25 @@ public class FitFileStore {
 	 * File[] with files in there
 	 * 
 	 * @return
+	 * @throws IOException 
 	 */
-	public static TableElement ParseFitFile(String uneditedFileURL) throws IOException {
+	public static TableElement ParseFitFile(String url) throws IOException
+	{
+		return ParseFitFile(new File(url));
+	}
+	
+	public static TableElement ParseFitFile(File uneditedFileURL) throws IOException {
 		// remove the URL for WGET command from the filename //
-		String spectrumFileName = "";
-		int indexOfSlash = uneditedFileURL.lastIndexOf("/");
+//		String spectrumFileName = "";
+//		int indexOfSlash = uneditedFileURL.lastIndexOf("/");
 
 		Boolean needSpectrum = true; //TODO this isn't supposed to be hard-coded
 
-		if (indexOfSlash > 0)
-			spectrumFileName = uneditedFileURL.substring(indexOfSlash + 1);
-		else
-			spectrumFileName = uneditedFileURL;
+//		if (indexOfSlash > 0)
+//			spectrumFileName = uneditedFileURL.substring(indexOfSlash + 1);
+//		else
+//			spectrumFileName = uneditedFileURL;
+		String spectrumFileName = uneditedFileURL.getName();
 
 		// then read in the fits file and extract the plate and coordinate information from the header //
 		TableElement element = new TableElement(spectrumFileName);

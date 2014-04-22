@@ -12,10 +12,10 @@ public class TableElementModel extends AbstractTableModel {
 	TableElementModel(ArrayList<TableElement> data)
 	{
 		_data = data;
-		filter("","","","","");
+		filter("","","","","",false);
 	}
 	
-	public void filter(String RA, String DEC, String MJD, String PLATE, String FIBER )
+	public void filter(String RA, String DEC, String MJD, String PLATE, String FIBER, boolean matches )
 	{
 		_filter.clear();
 		for(int i = 0; i < _data.size(); i++)
@@ -32,6 +32,8 @@ public class TableElementModel extends AbstractTableModel {
 			if ( PLATE != null && !Integer.toString( plateinfo[1] ).contains( PLATE ) )
 				filter = false;
 			if ( FIBER != null && !Integer.toString( plateinfo[2] ).contains( FIBER ) )
+				filter = false;
+			if (matches && _data.get(i).getMatches().isEmpty())
 				filter = false;
 			if ( filter )
 				_filter.add( i );

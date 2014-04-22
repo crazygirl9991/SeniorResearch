@@ -1,17 +1,21 @@
 package downloadCenter;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 
 /**
- * Stores table administrative information (e.g. name, table format, etc.) and contains all functionality required to 
- * update the table, including provisions for creating and restoring table back-ups and
- * comparing/storing table elements which match.
+ * Stores table administrative information (e.g. name, table format, etc.) and
+ * contains all functionality required to update the table, including provisions
+ * for creating and restoring table back-ups and comparing/storing table
+ * elements which match.
+ * 
  * @author victoria
  *
  */
@@ -22,56 +26,59 @@ public class TableManager {
 	public static String LIST_DELIMITER = ",";
 
 	public static Double DISTANCE_THRESHOLD = 2.0 / 3600; // 2 arcsecs in degrees
-	
+
 	@SuppressWarnings("unused")
 	private static Double FIBER_DISTANCE_THRESHOLD = 55.0; // arcsecs - physical limitation of drilling fibers on a plate
 
 	/**
 	 * TODO
+	 * 
 	 * @param ce
 	 * @return
 	 * @throws IOException
 	 */
 	private static String makeBackup() throws IOException {
-		String backupFileName = renameForBackup(TABLE_NAME) ;
-		
+		String backupFileName = renameForBackup(TABLE_NAME);
+
 		try {
 			CommandExecutor.copy(TABLE_NAME, backupFileName);
 		} catch (Exception e) {
-			throw ( new IOException("ERROR: Could not backup table: " + TABLE_NAME, e) );
+			throw (new IOException("ERROR: Could not backup table: " + TABLE_NAME, e));
 		}
-		
+
 		return backupFileName;
 	}
-	
+
 	/**
 	 * TODO
+	 * 
 	 * @param filename
 	 * @return
 	 */
 	private static String renameForBackup(String filename) {
 		String basefilename, path = "";
-		
-		if( TABLE_NAME.equals("") ) {
+
+		if (TABLE_NAME.equals("")) {
 			basefilename = "default";
 		} else {
 			int indexOfExt = TABLE_NAME.lastIndexOf('.');
 			basefilename = TABLE_NAME.substring(0, indexOfExt);
-			
-			if( basefilename.contains("/") ) {
+
+			if (basefilename.contains("/")) {
 				int indexOfSlash = basefilename.lastIndexOf('/');
-				path = basefilename.substring(0, indexOfSlash+1);
-				basefilename = basefilename.substring( indexOfSlash+1, basefilename.length() );
+				path = basefilename.substring(0, indexOfSlash + 1);
+				basefilename = basefilename.substring(indexOfSlash + 1, basefilename.length());
 			}
 		}
-		
+
 		String renamed = path + "cp-" + basefilename + ".backup";
-		
+
 		return renamed;
 	}
-	
+
 	/**
 	 * TODO
+	 * 
 	 * @param ce
 	 * @throws IOException
 	 */
@@ -80,38 +87,38 @@ public class TableManager {
 			CommandExecutor.copy(filename, TABLE_NAME);
 			CommandExecutor.remove(filename);
 		} catch (Exception e) {
-			throw ( new IOException("ERROR: could not restore file " + filename + " to table " + TABLE_NAME, e) );
+			throw (new IOException("ERROR: could not restore file " + filename + " to table " + TABLE_NAME, e));
 		}
 	}
-	
+
 	/**
 	 * TODO
+	 * 
 	 * @return
 	 * @throws Exception
 	 */
 	static ArrayList<TableElement> importTable() throws Exception {
 		ArrayList<TableElement> table = new ArrayList<TableElement>();
 		Scanner scanner;
-	
+
 		try {
-			scanner = new Scanner( new FileReader(TABLE_NAME) );
-		
-			while( scanner.hasNextLine() ) {
+			scanner = new Scanner(new FileReader(TABLE_NAME));
+
+			while (scanner.hasNextLine()) {
 				String nextLine = scanner.nextLine();
-				if( !nextLine.startsWith("#") && !nextLine.equals("") ) {
+				if (!nextLine.startsWith("#") && !nextLine.equals("")) {
 					TableElement that = TableElement.parse(nextLine);
 					table.add(that);
 				}
 			}
-			
+
 			scanner.close();
-		} catch(FileNotFoundException f) {
+		} catch (FileNotFoundException f) {
 			throw f;
 		}
-		
+
 		return table;
 	}
-	
 
 	/**
 	 * TODO
@@ -125,16 +132,17 @@ public class TableManager {
 
 			writer.write(FILE_HEADER);
 			for (TableElement current : table)
-				writer.write( current.toString() +"\n");
+				writer.write(current.toString() + "\n");
 
 			writer.close();
 		} catch (Exception e) {
 			throw (new UnsupportedOperationException("ERROR: Could not write updated data to table: " + TABLE_NAME, e));
 		}
 	}
-	
+
 	/**
 	 * TODO
+	 * 
 	 * @return
 	 */
 	public static String[] getDisplay() {
@@ -142,50 +150,77 @@ public class TableManager {
 		try {
 			ArrayList<TableElement> table = importTable();
 			tableArray = new String[table.size()];
-			for(int i = 0; i < table.size(); i++)
+			for (int i = 0; i < table.size(); i++)
 				tableArray[i] = table.get(i).toString();
-		
+
 		} catch (FileNotFoundException f) {
 			tableArray = new String[1];
-			
+
 			tableArray[0] = "File not found: " + TABLE_NAME + " does not exist. Have any files been downloaded yet?";
 		} catch (Exception e) {
 			e.printStackTrace();
-			
+
 			tableArray = new String[1];
 		}
-		
+
 		return tableArray;
 	}
-	
+
 	/**
-	 * Imports current table, locates matches, and assigns
-	 * uniqueID to this table element. Then updates the table.
+	 * Imports current table, locates matches, and assigns uniqueID to this
+	 * table element. Then updates the table.
 	 */
 	public static void SaveToTable(TableElement element) throws Exception {
 		String backup = makeBackup();
-		
-		try {			
+
+		try {
 			ArrayList<TableElement> table = importTable();
 			//TODO implement improved match algorithm
 			//TODO TODO prevent duplicate files from being written to the table!!
-			element.setUniqueID( table.size() );
-			
-			for(TableElement that : table) {
-				if( element.isMatch(that) ) { 
+			element.setUniqueID(table.size());
+
+			for (TableElement that : table) {
+				if (element.isMatch(that)) {
 					element.addMatch(that);
 					that.addMatch(element);
 				}
 			}
-		
+
 			table.add(element);
-			
+
 			writeTable(table);
-		} catch(FileNotFoundException f) {
+		} catch (FileNotFoundException f) {
 			CommandExecutor.createFile(TABLE_NAME);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			restore(backup);
-			throw ( new IOException("ERROR: Table IOS failed.", e) );
-		}	
+			throw (new IOException("ERROR: Table IOS failed.", e));
+		}
+	}
+
+	public static void updateTable() throws IOException {
+		String backup = makeBackup();
+		ArrayList<TableElement> table = new ArrayList<TableElement>();
+		try {
+			File pwd = new File(WorkingDirectory.DOWNLOADS.toString());
+			for (File curr : pwd.listFiles())
+				table.add(FitFileStore.ParseFitFile(curr));
+			Collections.sort(table);
+			for (int i = 0; i < table.size(); i++)
+				table.get(i).setUniqueID(i);
+			for (int i = 0; i < table.size(); i++) {
+				TableElement tei = table.get(i);
+				for (int j = i + 1; j < table.size(); j++) {
+					TableElement tej = table.get(j);
+					if (tei.isMatch(tej)) {
+						tei.addMatch(tej);
+						tej.addMatch(tei);
+					}
+				}
+			}
+			writeTable(table);
+		} catch (Exception e) {
+			restore(backup);
+			throw (new IOException("ERROR: Table IOS failed.", e));
+		}
 	}
 }
