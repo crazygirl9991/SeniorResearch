@@ -29,49 +29,17 @@ public class FitFileStore {
 		_downloadUrls.add(formatPlateInfoToUrl(MJD, plate, fiber));
 	}
 
-	/**
-	 * TODO
-	 * 
-	 * @param plateInfo
-	 */
 	public FitFileStore(int[] plateInfo) {
-		if (plateInfo[2] == 0) {
-			int FIBERS;
-
-			if (plateInfo[0] <= 55000)
-				FIBERS = 640; // SDSS I & II (before MJD = 55000) had 640 fibers per plate
-			else
-				FIBERS = 1000; // SDSS III had 1000 fibers per plate
-
-			for (int i = 100; i <= FIBERS; i++)
-				//TODO fibers start where?
-				_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], i));
-		} else
-			_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], plateInfo[2]));
+		formatBulkDownload(plateInfo);
 	}
 
 	public FitFileStore(ArrayList<int[]> plateInfos) {
-		for (int[] plateInfo : plateInfos) {
-			if (plateInfo[2] == 0) {
-				int FIBERS;
-
-				if (plateInfo[0] <= 55000)
-					FIBERS = 640; // SDSS I & II (before MJD = 55000) had 640 fibers per plate
-				else
-					FIBERS = 1000; // SDSS III had 1000 fibers per plate
-
-				for (int i = 100; i <= FIBERS; i++)
-					//TODO fibers start where?
-					_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], i));
-			} else
-				_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], plateInfo[2]));
-		}
+		for(int[] plateInfo : plateInfos)
+			formatBulkDownload(plateInfo);
 	}
 
 	/**
-	 * Runs a WGET query with specified "downloads" directory (contained in
-	 * WorkingDirectory.java). Requires formatted outputfile (using Rename() and
-	 * then Write(), found in this class).
+	 * Downloads valid SDSS URLs via CommandExecutor functionality.
 	 * 
 	 * @throws IOException
 	 */
@@ -86,27 +54,27 @@ public class FitFileStore {
 	}
 
 	/**
-	 * TODO 
+	 * Opens a fits file, retrieves information regarding plate, position, and
+	 * spectral data, and returns an TableElement initialized with this information.
 	 * 
 	 * @return
 	 * @throws IOException 
 	 */
-	public static TableElement ParseFitFile(String url) throws IOException
-	{
-		return ParseFitFile(new File(url));
+	public static TableElement ParseFitFile(String url) throws IOException {
+		return ParseFitFile( new File(url) );
 	}
 	
+	/**
+	 * Opens a fits file, retrieves information regarding plate, position, and
+	 * spectral data, and returns an TableElement initialized with this information.
+	 * 
+	 * @return
+	 * @throws IOException 
+	 */
 	public static TableElement ParseFitFile(File uneditedFileURL) throws IOException {
-		// remove the URL for WGET command from the filename //
-//		String spectrumFileName = "";
-//		int indexOfSlash = uneditedFileURL.lastIndexOf("/");
-
 		Boolean needSpectrum = true; //TODO this isn't supposed to be hard-coded
 
-//		if (indexOfSlash > 0)
-//			spectrumFileName = uneditedFileURL.substring(indexOfSlash + 1);
-//		else
-//			spectrumFileName = uneditedFileURL;
+		// remove the URL to get just the filename //
 		String spectrumFileName = uneditedFileURL.getName();
 
 		// then read in the fits file and extract the plate and coordinate information from the header //
@@ -181,6 +149,31 @@ public class FitFileStore {
 		 * http://das.sdss.org/spectro/1d_26/1615/1d/spSpec-53166-1615-513.fit
 		 * Where MJD = 53166, plate = 1615, and fiber = 513
 		 */
-		return "http://das.sdss.org/spectro/1d_26/" + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiber + ".fit";
+		// fiber needs to have padded 0s if less than 100 //
+		String fiberStr = "";
+		if(fiber < 10)
+			fiberStr = "0";
+		else if(fiber < 100)
+			fiberStr = "00";
+		
+		return "http://das.sdss.org/spectro/1d_26/" + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit";
+	}
+	
+	/**
+	 * Contains the logic for downloading fit files in bulk.
+	 */
+	private void formatBulkDownload(int[] plateInfo) {
+		if (plateInfo[2] == 0) {
+			int FIBERS;
+
+			if (plateInfo[0] <= 55000)
+				FIBERS = 640; // SDSS I & II (before MJD = 55000) had 640 fibers per plate
+			else
+				FIBERS = 1000; // SDSS III had 1000 fibers per plate
+
+			for (int i = 0; i <= FIBERS; i++)
+				_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], i));
+		} else
+			_downloadUrls.add(formatPlateInfoToUrl(plateInfo[0], plateInfo[1], plateInfo[2]));
 	}
 }

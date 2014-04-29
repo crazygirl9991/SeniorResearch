@@ -167,8 +167,8 @@ public class Main implements ActionListener, DocumentListener {
 		switch ( event.getActionCommand() ) {
 		case "Download Files":
 			FitFileStore store = new FitFileStore( element.getPlateInfo() );
-			//			try {
-			//store.Download();
+		try {
+			store.Download();
 			new SwingWorker<Void, Integer>() {
 				@Override
 				protected Void doInBackground() throws Exception {
@@ -182,10 +182,10 @@ public class Main implements ActionListener, DocumentListener {
 					update();
 				}
 			}.execute();
-			//			} catch (IOException e1) {
-			//				// TODO Auto-generated catch block
-			//				e1.printStackTrace();
-			//			}
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 			//			if( invalidPlateInfo.equals("none") ) {	
 			//				try {
 			//					FitFileStore store = new FitFileStore( element.getPlateInfo() );
