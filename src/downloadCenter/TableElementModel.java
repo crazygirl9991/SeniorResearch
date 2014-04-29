@@ -76,4 +76,9 @@ public class TableElementModel extends AbstractTableModel {
 		default: return "Error";
 		}
 	}
+	
+	public void setData(ArrayList<TableElement> data)
+	{
+		_data = data;
+	}
 }
