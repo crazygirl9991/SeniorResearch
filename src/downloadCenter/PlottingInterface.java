@@ -25,8 +25,8 @@ import javax.swing.event.ChangeListener;
  */
 public class PlottingInterface implements ActionListener, ChangeListener {
 	FitFileStore fileStore = new FitFileStore();
-	private static SpectrumPlotter plot1;
-	private static SpectrumPlotter plot2;
+	private SpectrumPlotter plot1;
+	private SpectrumPlotter plot2;
 
 	/**
 	 * TODO
@@ -40,17 +40,17 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 
 		// Create and setup a JFrame
 		JFrame frame = new JFrame("Plotting Interface");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		Container content = frame.getContentPane();
 
 		// Create a panel to hold both of the plots
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		plot1 = new SpectrumPlotter(new TableElement[] { te1, te2 });
+		plot1 = new SpectrumPlotter(new TableElement[] { te1, te2 },this);
 		panel.add(plot1);
 
-		plot2 = new SpectrumPlotter(new TableElement[] { calculateRatio(te1, te2) });
+		plot2 = new SpectrumPlotter(new TableElement[] { calculateRatio(te1, te2) },this);
 		panel.add(plot2);
 		content.add(panel, BorderLayout.CENTER);
 
@@ -178,20 +178,33 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 	@Override
 	public void stateChanged(ChangeEvent ce) {
 		JCheckBox smoothed = (JCheckBox) ce.getSource();
-		SpectrumPlotter.setSmoothed(smoothed.isSelected());
+		plot1.setSmoothed(smoothed.isSelected());
+		plot2.setSmoothed(smoothed.isSelected());
 		redrawBothPlots();
 	}
 	
-	public static void redrawBothPlots() {
+	public void redrawBothPlots() {
 		plot1.redraw();
 		plot2.redraw();
 	}
 	
-	public static void repaintBothPlots() {
+	public void updateWindow(float center, float zoom){
+		plot1.updateWindow(center,zoom);
+		plot2.updateWindow(center,zoom);
+		redrawBothPlots();
+	}
+	
+	public void repaintBothPlots() {
 		// this is a built in function which calls upon paintComponent() from SpectrumPlotter,
 		// which is overridden for this purpose
 		plot1.repaint();
 		plot2.repaint();
+	}
+
+	public void updateTrace(float currenttrace) {
+		plot1.updateTrace(currenttrace);
+		plot2.updateTrace(currenttrace);
+		repaintBothPlots();
 	}
 
 }

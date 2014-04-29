@@ -33,11 +33,11 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 
 	private TableElement[] _elements;
 
-	private static int SIZE_X = 800; // width of the plots in pixels
-	private static int SIZE_Y = 300; // height of the plots in pixels
+	private int SIZE_X = 800; // width of the plots in pixels
+	private int SIZE_Y = 300; // height of the plots in pixels
 	
-	private static final float DIVISION_X = 10; // number of divisions along the x axis
-	private static final float DIVISION_Y = 10; // number of divisions along the y axis
+	private final float DIVISION_X = 10; // number of divisions along the x axis
+	private final float DIVISION_Y = 10; // number of divisions along the y axis
 	
 	// margins around the graph
 	private int _leftMargin;
@@ -46,13 +46,13 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	private int _bottomMargin;
 
 	// how many pixels on either side to average together
-	private static final int SMOOTH_RADIUS = 1;
+	private final int SMOOTH_RADIUS = 1;
 
 	// controls the spacing between the text
-	private static final int GAP = 5;
+	private final int GAP = 5;
 
 	// determines the size of the trace marker in pixels
-	private static final float DOT_RADIUS = 3;
+	private final float DOT_RADIUS = 3;
 
 	// 
 	private final float MIN_X;
@@ -62,20 +62,23 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	private Float maxX; // maximum x of view window
 	private Float minY; // minimum y of view window
 	private Float maxY; // maximum y of view window
-	private static float zoom = 2;
-	private static float center;
+	private float zoom = 2;
+	private float center;
 	private BufferedImage bitmap; // bitmap used for double buffering
 
-	private static float currenttrace = 0;
+	private float currenttrace = 0;
 
-	private static boolean smoothdata;
+	private boolean smoothdata;
 
 	private ArrayList<ArrayList<Float>> xdata;
 
 	private ArrayList<ArrayList<Float>> ydata;
+	
+	private PlottingInterface _parent;
 
-	public SpectrumPlotter(TableElement[] elements) throws Exception {
+	public SpectrumPlotter(TableElement[] elements, PlottingInterface parent) throws Exception {
 		_elements = elements;
+		_parent = parent;
 		
 		// Spectrum plotter has control over coloring each table element for now, but the
 		// elements themselves keep track of their color for more organized persistence
@@ -301,7 +304,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		repaint();
 	}
 
-	public static void setSmoothed(boolean selected) {
+	public void setSmoothed(boolean selected) {
 		smoothdata = selected;
 	}
 
@@ -343,7 +346,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 			break;
 		}
 		center = Math.max((MAX_X - MIN_X) / zoom + MIN_X, Math.min(MAX_X - (MAX_X - MIN_X) / zoom, center));
-		PlottingInterface.redrawBothPlots();
+		_parent.updateWindow(center,zoom);
 	}
 
 	@Override
@@ -369,6 +372,15 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	@Override
 	public void mouseMoved(MouseEvent me) {
 		currenttrace = (me.getX() - _leftMargin) / ((float) SIZE_X - _leftMargin - _rightMargin) * (maxX - minX) + minX;
-		PlottingInterface.repaintBothPlots();
+		_parent.updateTrace(currenttrace);
+	}
+
+	public void updateWindow(float newcenter, float newzoom) {
+		center = newcenter;
+		zoom = newzoom;
+	}
+
+	public void updateTrace(float newcurrenttrace) {
+		currenttrace = newcurrenttrace;
 	}
 }
