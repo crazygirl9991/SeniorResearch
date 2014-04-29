@@ -17,6 +17,9 @@ public class FitFileStore {
 
 	protected ArrayList<String> _downloadUrls = new ArrayList<String>();
 	protected static WorkingDirectory WORKING_DIRECTORY = WorkingDirectory.DOWNLOADS;
+	
+	// The cut-off MJD between SDSS I && II and SDSS III
+	public static int DATA_RELEASE = 55000; 
 
 	public FitFileStore() {
 	}
@@ -166,7 +169,7 @@ public class FitFileStore {
 		if (plateInfo[2] == 0) {
 			int FIBERS;
 
-			if (plateInfo[0] <= 55000)
+			if (plateInfo[0] <= DATA_RELEASE)
 				FIBERS = 640; // SDSS I & II (before MJD = 55000) had 640 fibers per plate
 			else
 				FIBERS = 1000; // SDSS III had 1000 fibers per plate

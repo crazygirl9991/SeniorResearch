@@ -2,7 +2,6 @@ package downloadCenter;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Keeps track of all administrative information of a .FITS file, knowing how
@@ -28,7 +27,7 @@ public class TableElement implements Comparable<TableElement> {
 	//TODO decide about this: private Boolean _sciencePrimary;
 	
 	// this is a comma delimited list of uniqueIDs for different spectra describing the same object
-	private List<Integer> _matches = new ArrayList<Integer>();
+	private ArrayList<Integer> _matches = new ArrayList<Integer>();
 
 	public TableElement() {
 		_filename = "unknown";
@@ -136,7 +135,10 @@ public class TableElement implements Comparable<TableElement> {
 		_plateInfo[2] = fiber;
 	}
 	
-	public List<Integer> getMatches() { return _matches; }
+	/**
+	 * Returns a copy of the list as its own instance, and not a reference to the list.
+	 */
+	public ArrayList<Integer> getMatches() { return (new ArrayList<Integer>(_matches) ); }
 	public void setMatches(String newMatches) throws UnsupportedOperationException { 
 		if( newMatches.equals("") ) {
 			_matches = null;

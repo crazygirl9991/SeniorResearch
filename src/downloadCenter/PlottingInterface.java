@@ -47,10 +47,10 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		plot1 = new SpectrumPlotter(new TableElement[] { te1, te2 },this);
+		plot1 = new SpectrumPlotter(new TableElement[] { te1, te2 }, this);
 		panel.add(plot1);
 
-		plot2 = new SpectrumPlotter(new TableElement[] { calculateRatio(te1, te2) },this);
+		plot2 = new SpectrumPlotter(new TableElement[] { calculateRatio(te1, te2) }, this);
 		panel.add(plot2);
 		content.add(panel, BorderLayout.CENTER);
 

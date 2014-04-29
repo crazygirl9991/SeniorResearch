@@ -6,20 +6,17 @@ import javax.swing.table.AbstractTableModel;
 
 @SuppressWarnings("serial")
 public class TableElementModel extends AbstractTableModel {
-	final String[] colnames = new String[]{"ID",/*"Filename",*/"RA","Dec","MJD","Plate","Fiber","Matches"};
+	final String[] colnames = new String[]{"ID","RA","Dec","MJD","Plate","Fiber","Matches"};
 	ArrayList<Integer> _filter = new ArrayList<Integer>();
 	ArrayList<TableElement> _data;
-	TableElementModel(ArrayList<TableElement> data)
-	{
+	TableElementModel(ArrayList<TableElement> data) {
 		_data = data;
 		filter("","","","","",false);
 	}
 	
-	public void filter(String RA, String DEC, String MJD, String PLATE, String FIBER, boolean matches )
-	{
+	public void filter(String RA, String DEC, String MJD, String PLATE, String FIBER, boolean matches ) {
 		_filter.clear();
-		for(int i = 0; i < _data.size(); i++)
- {
+		for(int i = 0; i < _data.size(); i++) {
 			double[] coords = _data.get( i ).getCoords();
 			int[] plateinfo = _data.get( i ).getPlateInfo();
 			boolean filter = true;
@@ -41,9 +38,16 @@ public class TableElementModel extends AbstractTableModel {
 		fireTableStructureChanged();
 	}
 	
-	public String getRow(int r)
-	{
-		return _data.get(_filter.get(r)).getFilename();
+	public String getRowFileName(int r) {
+		return _data.get( _filter.get(r) ).getFilename();
+	}
+	
+	public TableElement getRowUnfiltered(int r) {
+		return _data.get( r );
+	}
+	
+	public TableElement getRowFiltered(int r) {
+		return _data.get( _filter.get(r) );
 	}
 
 	@Override
@@ -63,22 +67,20 @@ public class TableElementModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int r, int c) {
-		TableElement te = _data.get(_filter.get(r));
-		switch(c)
-		{
-		case 0: return te.getUniqueID();
-		case 1: return te.getCoords()[0];
-		case 2: return te.getCoords()[1];
-		case 3: return te.getPlateInfo()[0];
-		case 4: return te.getPlateInfo()[1];
-		case 5: return te.getPlateInfo()[2];
-		case 6: return te.getMatches();
-		default: return "Error";
+		TableElement te = _data.get( _filter.get(r) );
+		switch(c) {
+			case 0: return te.getUniqueID();
+			case 1: return te.getCoords()[0];
+			case 2: return te.getCoords()[1];
+			case 3: return te.getPlateInfo()[0];
+			case 4: return te.getPlateInfo()[1];
+			case 5: return te.getPlateInfo()[2];
+			case 6: return te.getMatches();
+			default: return "Error";
 		}
 	}
 	
-	public void setData(ArrayList<TableElement> data)
-	{
+	public void setData(ArrayList<TableElement> data) {
 		_data = data;
 	}
 }
