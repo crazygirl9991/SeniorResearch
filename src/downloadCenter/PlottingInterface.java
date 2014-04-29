@@ -38,7 +38,7 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 
 		TableElement[] elements = new TableElement[files.size()];
 		for ( int i = 0; i < files.size(); i++ ) {
-			elements[i] = FitFileStore.ParseFitFile( files.get(i) );
+			elements[i] = FitFileStore.ParseFitFile( files.get( i ) );
 			elements[i].setColor( Color.getHSBColor( (float) ( i + 1 ) / ( elements.length + 1 ), 1, 1 ) );
 		}
 
@@ -57,7 +57,7 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 		if ( elements.length == 2 ) {
 			TableElement ratio = calculateRatio( elements[0], elements[1] );
 			ratio.setColor( Color.red );
-			plots.add( new SpectrumPlotter( new TableElement[] { ratio }, this, true) );
+			plots.add( new SpectrumPlotter( new TableElement[] { ratio }, this, true ) );
 			panel.add( plots.get( 1 ) );
 		}
 		content.add( panel, BorderLayout.CENTER );
@@ -94,18 +94,30 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 	private TableElement calculateRatio(TableElement element1, TableElement element2) {
 		TableElement ratio = new TableElement();
 
-		int offset = Arrays.binarySearch( element2.getSpectrumDataX(), element1.getSpectrumDataX()[0] );
+		TableElement second;
+		TableElement first;
+		if ( element2.getSpectrumDataX()[0] <= element1.getSpectrumDataX()[0] ) {
+			second = element1;
+			first = element2;
+		}
+		else
+		{
+			second = element2;
+			first = element1;
+		}
+
+		int offset = Arrays.binarySearch( first.getSpectrumDataX(), second.getSpectrumDataX()[0] );
 
 		// If the data are different lengths then use the minimum for computing the ratios		
-		int n = Math.min( element1.getSpectrumDataX().length, element2.getSpectrumDataX().length - offset );
+		int n = Math.min( second.getSpectrumDataX().length, first.getSpectrumDataX().length - offset );
 
 		float[] ratioX = new float[n];
 		float[] ratioY = new float[n];
 		for ( int i = 0; i < n; i++ ) {
-			ratioX[i] = element1.getSpectrumDataX()[i];
+			ratioX[i] = second.getSpectrumDataX()[i];
 
 			// Divide each y value by the other corresponding one
-			ratioY[i] = element1.getSpectrumDataY()[i] / element2.getSpectrumDataY()[i + offset];
+			ratioY[i] = second.getSpectrumDataY()[i] / first.getSpectrumDataY()[i + offset];
 		}
 
 		ratio.setSpectrumData( ratioX, ratioY );
