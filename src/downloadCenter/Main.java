@@ -128,9 +128,13 @@ public class Main implements ActionListener, DocumentListener {
 					boxLayout.setLayout( new BoxLayout( boxLayout, BoxLayout.PAGE_AXIS ) );
 					panel0.setLayout( new BoxLayout( panel0, BoxLayout.PAGE_AXIS ) );
 					panel1.setLayout( new BoxLayout( panel1, BoxLayout.PAGE_AXIS ) );
+					
+					boxLayout.add( new Label("Please select at least 1 spectrum to plot. " +
+											"The ratio between any 2 spectra will be calculated only if exactly 2 are selected.", 
+											Main.FONT) );
 		
 					boxLayout.add( new Label( "Spectra: ", Main.FONT_BOLD) );
-					boxLayout.add( new Label( "   " + element.toString().replace("\t", "  |  "), Main.FONT) );
+					boxLayout.add( new Label( "   " + element.toString().replace(TableManager.COLUMN_DELIMITER, "  |  "), Main.FONT) );
 					
 
 					panel0.add( new Label("SDSS I & II", Main.FONT_BOLD) );		
@@ -150,7 +154,8 @@ public class Main implements ActionListener, DocumentListener {
 					boxLayout.add(panel1);
 	
 					Object[] buttonOptions = {"Plot", "Cancel"};
-					int n = JOptionPane.showOptionDialog( _frame, boxLayout, windowTitle, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+					int n = JOptionPane.showOptionDialog( _frame, boxLayout, windowTitle, JOptionPane.YES_NO_OPTION, 
+							JOptionPane.QUESTION_MESSAGE,
 							null, //do not use a custom Icon 
 							buttonOptions, // use this array to title the buttons
 							buttonOptions[1]); // and set the default button
@@ -212,8 +217,9 @@ public class Main implements ActionListener, DocumentListener {
 			element.setPlateInfo( plateInfo );
 
 			invalidEntries = "none";
-		} else if ( TextField.MJD.hasValidTextEntry() && TextField.PLATE.hasValidTextEntry() && TextField.FIBER.getText().equals( "Fiber" ) ) {
-			//TODO this is messy
+		} else if ( TextField.MJD.hasValidTextEntry() && TextField.PLATE.hasValidTextEntry() && TextField.FIBER.getText().equals( "" ) ) {
+			//TODO is this messy?
+			
 			String plateInfo = TextField.MJD.getText() + "," + TextField.PLATE.getText() + ",0";
 			element.setPlateInfo( plateInfo );
 

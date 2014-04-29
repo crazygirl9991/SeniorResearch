@@ -99,9 +99,7 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 		if ( element2.getSpectrumDataX()[0] <= element1.getSpectrumDataX()[0] ) {
 			second = element1;
 			first = element2;
-		}
-		else
-		{
+		} else {
 			second = element2;
 			first = element1;
 		}

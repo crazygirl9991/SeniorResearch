@@ -159,7 +159,8 @@ public class FitFileStore {
 		else if(fiber < 100)
 			fiberStr = "0";
 		
-		return "http://das.sdss.org/spectro/1d_26/" + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit";
+		//return "http://das.sdss.org/spectro/1d_26/" + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit";
+		return "http://data.sdss3.org/sas/dr10/boss/spectro/data/" + plate + "/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit";
 	}
 	
 	/**
