@@ -204,9 +204,9 @@ public class Main implements ActionListener, DocumentListener {
 			//				Error_Menu(invalidPlateInfo);
 			break;
 		case "Review Spectra":
-			if ( list0.getSelectedRows().length != 2 )
-				JOptionPane.showMessageDialog( _frame, "Please select 2 spectra to plot them", "Error! Unable to plot", JOptionPane.ERROR_MESSAGE );
-			else {
+//			if ( list0.getSelectedRows().length != 2 )
+//				JOptionPane.showMessageDialog( _frame, "Please select 2 spectra to plot them", "Error! Unable to plot", JOptionPane.ERROR_MESSAGE );
+//			else {
 				//			if( invalidCoords.equals("none") ) {
 				//				
 				//			} else if( invalidPlateInfo.equals("none") ) {
@@ -214,11 +214,15 @@ public class Main implements ActionListener, DocumentListener {
 				//			}
 				try {
 					PlottingInterface plotUI = new PlottingInterface();
-					plotUI.display( model.getRow( list0.getSelectedRows()[0] ), model.getRow( list0.getSelectedRows()[1] ) );//"spSpec-53847-2235-179.fit", "spSpec-53729-2236-303.fit" );
+					String[] files = new String[list0.getSelectedRows().length];
+					for(int i = 0; i < list0.getSelectedRows().length; i++)
+						files[i] = model.getRow(list0.getSelectedRows()[i]);
+//					plotUI.display( model.getRow( list0.getSelectedRows()[0] ), model.getRow( list0.getSelectedRows()[1] ) );//"spSpec-53847-2235-179.fit", "spSpec-53729-2236-303.fit" );
+					plotUI.display(files);
 				} catch ( Exception e ) {
 					e.printStackTrace();
 				}
-			}
+//			}
 			break;
 		case "toggle":
 			update();

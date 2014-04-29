@@ -75,21 +75,24 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	private ArrayList<ArrayList<Float>> ydata;
 	
 	private PlottingInterface _parent;
+	
+	private boolean _ratio;
 
-	public SpectrumPlotter(TableElement[] elements, PlottingInterface parent) throws Exception {
+	public SpectrumPlotter(TableElement[] elements, PlottingInterface parent, boolean ratio) throws Exception {
 		_elements = elements;
 		_parent = parent;
+		_ratio = ratio;
 		
 		// Spectrum plotter has control over coloring each table element for now, but the
 		// elements themselves keep track of their color for more organized persistence
 		// and the potential of adding auto-coloring to the TableElement class later.
-		if (_elements.length == 1)
-			elements[0].setColor(Color.red);
-		else if (_elements.length == 2) {
-			elements[0].setColor(Color.green.darker());
-			elements[1].setColor(Color.blue);
-		} else
-			throw new Exception("ERROR: Attempting to plot invalid number of spectra.");
+//		if (_elements.length == 1)
+//			elements[0].setColor(Color.red);
+//		else if (_elements.length == 2) {
+//			elements[0].setColor(Color.green.darker());
+//			elements[1].setColor(Color.blue);
+//		} else
+//			throw new Exception("ERROR: Attempting to plot invalid number of spectra.");
 
 		// set the size of the plots
 		setPreferredSize( new Dimension(SIZE_X, SIZE_Y) );
@@ -263,7 +266,16 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		String xaxislabel = "Wavelength (\u00C5)";
 		g2.drawString(xaxislabel, pixelX((maxX + minX) / 2) - fontMetrics.stringWidth(xaxislabel) / 2, pixelY(minY) + 3 * GAP + 2 * strheight);
 
-		if (_elements.length == 2) {
+		if (_ratio) {
+			g2.setStroke( new BasicStroke(0, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1f, new float[] { 5 }, 0) );
+			g2.draw( new Line2D.Float(pixelX(minX), pixelY(1), pixelX(maxX), pixelY(1) ) );
+			AffineTransform identity = g2.getTransform();
+			g2.transform(AffineTransform.getRotateInstance(-Math.PI / 2, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2, pixelY((maxY + minY) / 2)));
+			String yaxislabel = "Ratio Between Flux";
+			float yaxislabelwidth = fontMetrics.stringWidth(yaxislabel);
+			g2.drawString(yaxislabel, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2 - yaxislabelwidth / 2, pixelY((maxY + minY) / 2) + strheight / 2);
+			g2.setTransform(identity);
+		} else {
 			// label access with units of flux (rotated and positioned at center height and margin-left)
 			AffineTransform identity = g2.getTransform();
 			g2.transform(AffineTransform.getRotateInstance(-Math.PI / 2, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2, pixelY((maxY + minY) / 2)));
@@ -276,15 +288,6 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 			AttributedCharacterIterator iterator = yaxislabel.getIterator();
 			float yaxislabelwidth = (float) fontMetrics.getStringBounds(iterator, iterator.getBeginIndex(), iterator.getEndIndex(), g2).getWidth();
 			g2.drawString(iterator, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2 - yaxislabelwidth / 2, pixelY((maxY + minY) / 2) + strheight / 2);
-			g2.setTransform(identity);
-		} else {
-			g2.setStroke( new BasicStroke(0, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1f, new float[] { 5 }, 0) );
-			g2.draw( new Line2D.Float(pixelX(minX), pixelY(1), pixelX(maxX), pixelY(1) ) );
-			AffineTransform identity = g2.getTransform();
-			g2.transform(AffineTransform.getRotateInstance(-Math.PI / 2, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2, pixelY((maxY + minY) / 2)));
-			String yaxislabel = "Ratio Between Flux";
-			float yaxislabelwidth = fontMetrics.stringWidth(yaxislabel);
-			g2.drawString(yaxislabel, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2 - yaxislabelwidth / 2, pixelY((maxY + minY) / 2) + strheight / 2);
 			g2.setTransform(identity);
 		}
 		for (int i = 0; i <= DIVISION_X; i++) {
