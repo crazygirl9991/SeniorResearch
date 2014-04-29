@@ -169,11 +169,12 @@ public class FitFileStore {
 
 				element.setSpectrumData(dataX, dataY);
 			}
+			fitFileImport.getStream().close();
 
 		} catch (Exception e) {
 			throw (new IOException("Could not read in data for fit file: " + spectrumFileName, e));
 		}
-
+		
 		return element;
 	}
 
