@@ -33,14 +33,14 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 	 * 
 	 * @throws Exception
 	 */
-	public void display(String[] files) throws Exception {
+	public void display(ArrayList<String> files) throws Exception {
 		// Read in the data from each fit file
 		//		TableElement te1 = FitFileStore.ParseFitFile(file1);
 		//		TableElement te2 = FitFileStore.ParseFitFile(file2);
 
-		TableElement[] elements = new TableElement[files.length];
-		for ( int i = 0; i < files.length; i++ ) {
-			elements[i] = FitFileStore.ParseFitFile( files[i] );
+		TableElement[] elements = new TableElement[files.size()];
+		for ( int i = 0; i < files.size(); i++ ) {
+			elements[i] = FitFileStore.ParseFitFile( files.get(i) );
 			elements[i].setColor( Color.getHSBColor( (float) ( i + 1 ) / ( elements.length + 1 ), 1, 1 ) );
 		}
 
