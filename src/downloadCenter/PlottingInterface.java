@@ -35,8 +35,6 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 	 */
 	public void display(ArrayList<String> files) throws Exception {
 		// Read in the data from each fit file
-		//		TableElement te1 = FitFileStore.ParseFitFile(file1);
-		//		TableElement te2 = FitFileStore.ParseFitFile(file2);
 
 		TableElement[] elements = new TableElement[files.size()];
 		for ( int i = 0; i < files.size(); i++ ) {
