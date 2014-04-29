@@ -60,10 +60,10 @@ public class Main implements ActionListener, DocumentListener {
 
 			for ( TextField curr : TextField.values() )
 				curr.getTextField().getDocument().addDocumentListener( this );
-			
+
 			TableManager.updateTable();
 			model = new TableElementModel( TableManager.importTable() );
-			
+
 			list0 = new JTable( model );
 			JScrollPane scroll = new JScrollPane( list0 );
 			panel3.add( scroll );
@@ -167,25 +167,25 @@ public class Main implements ActionListener, DocumentListener {
 		switch ( event.getActionCommand() ) {
 		case "Download Files":
 			FitFileStore store = new FitFileStore( element.getPlateInfo() );
-			//			try {
-			//store.Download();
-			new SwingWorker<Void, Integer>() {
-				@Override
-				protected Void doInBackground() throws Exception {
-					TableManager.updateTable();
-					model.setData( TableManager.importTable() );
-					return null;
-				}
+			try {
+				store.Download();
+				new SwingWorker<Void, Integer>() {
+					@Override
+					protected Void doInBackground() throws Exception {
+						TableManager.updateTable();
+						model.setData( TableManager.importTable() );
+						return null;
+					}
 
-				@Override
-				protected void done() {
-					update();
-				}
-			}.execute();
-			//			} catch (IOException e1) {
-			//				// TODO Auto-generated catch block
-			//				e1.printStackTrace();
-			//			}
+					@Override
+					protected void done() {
+						update();
+					}
+				}.execute();
+			} catch ( IOException e1 ) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			//			if( invalidPlateInfo.equals("none") ) {	
 			//				try {
 			//					FitFileStore store = new FitFileStore( element.getPlateInfo() );
