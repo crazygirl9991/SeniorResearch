@@ -202,16 +202,16 @@ public class TableManager {
 		ArrayList<TableElement> table = new ArrayList<TableElement>();
 		try {
 			File pwd = new File(WorkingDirectory.DOWNLOADS.toString());
-			for (File curr : pwd.listFiles())
-				table.add(FitFileStore.ParseFitFile(curr));
+			for (File current : pwd.listFiles())
+				table.add( FitFileStore.ParseFitFile(current) );
 			Collections.sort(table);
-			for (int i = 0; i < table.size(); i++)
+			for(int i = 0; i < table.size(); i++)
 				table.get(i).setUniqueID(i);
-			for (int i = 0; i < table.size(); i++) {
+			for(int i = 0; i < table.size(); i++) {
 				TableElement tei = table.get(i);
-				for (int j = i + 1; j < table.size(); j++) {
+				for(int j = i + 1; j < table.size(); j++) {
 					TableElement tej = table.get(j);
-					if (tei.isMatch(tej)) {
+					if( tei.isMatch(tej) ) {
 						tei.addMatch(tej);
 						tej.addMatch(tei);
 					}

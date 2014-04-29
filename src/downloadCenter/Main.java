@@ -5,6 +5,7 @@ import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -152,13 +153,21 @@ public class Main implements ActionListener, DocumentListener {
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
-//		TableElement element = new TableElement();
+		TableElement element = new TableElement();
 		
 //		String invalidCoords = retrieveValidCoords(element); //TODO invalid not working
-//		String invalidPlateInfo = retrieveValidPlateInfo(element);
+		String invalidPlateInfo = retrieveValidPlateInfo(element);
 		
 		switch (event.getActionCommand()) {
-//		case "Download Files":
+		case "Download Files":
+			FitFileStore store = new FitFileStore(element.getPlateInfo());
+			try {
+				//store.Download();
+				TableManager.updateTable();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 //			if( invalidPlateInfo.equals("none") ) {	
 //				try {
 //					FitFileStore store = new FitFileStore( element.getPlateInfo() );
