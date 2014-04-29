@@ -13,7 +13,7 @@ import java.util.List;
 public class TableElement implements Comparable<TableElement> {
 	private int _uniqueID; // not assigned until added to the table
 	private String _filename;
-	private double[] _coords = {0, 0}; // spherical { rho, theta, phi }
+	private double[] _coords = {0, 0}; // spherical { theta, phi }
 	private int[] _plateInfo = {0, 0, 0};
 	
 	// These are only used when plotting the spectrum
@@ -256,10 +256,12 @@ public class TableElement implements Comparable<TableElement> {
 		return str;
 	}
 
+	/**
+	 * Tells the elements how to sort themselves by plate info.
+	 */
 	@Override
 	public int compareTo(TableElement other) {
-		for(int i = 0; i < _plateInfo.length; i++)
-		{
+		for(int i = 0; i < _plateInfo.length; i++) {
 			if(_plateInfo[i] > other._plateInfo[i])
 				return 1;
 			else if(_plateInfo[i] < other._plateInfo[i])

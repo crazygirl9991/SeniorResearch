@@ -46,7 +46,7 @@ public enum TextField implements FocusListener {
 	//TODO why would return null?
 	public String getText() {
 		if(_textField.getText().equals(_textField.getName()))
-			return null;
+			return "";
 		else
 			return _textField.getText();
 	}

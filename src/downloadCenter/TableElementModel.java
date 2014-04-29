@@ -67,7 +67,6 @@ public class TableElementModel extends AbstractTableModel {
 		switch(c)
 		{
 		case 0: return te.getUniqueID();
-//		case 1: return te.getFilename();
 		case 1: return te.getCoords()[0];
 		case 2: return te.getCoords()[1];
 		case 3: return te.getPlateInfo()[0];

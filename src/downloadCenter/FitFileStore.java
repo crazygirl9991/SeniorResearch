@@ -86,26 +86,7 @@ public class FitFileStore {
 	}
 
 	/**
-	 * Imports each filename stored in outputfile one at a time and creates a
-	 * table element for that fits file. Then it calls a table element function
-	 * to check for matches TODO use only files that are actually downloaded and
-	 * don't read in from filepath TODO log which ones never got downloaded
-	 * 
-	 * @throws Exception
-	 */
-	public void UpdateTable() throws Exception {
-		for (String current : _downloadUrls) {
-			TableElement element = ParseFitFile(current);
-			TableManager.SaveToTable(element);
-		}
-	}
-
-	/**
-	 * TODO verify that only downloaded files are in the table [4:38:56 PM]
-	 * Leland Machen: well if you have a java File object [4:39:02 PM] Leland
-	 * Machen: that's pointing to a directory [4:39:10 PM] Leland Machen: you
-	 * can just say .listFiles() [4:39:19 PM] Leland Machen: and it'll give you
-	 * File[] with files in there
+	 * TODO 
 	 * 
 	 * @return
 	 * @throws IOException 

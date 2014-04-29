@@ -88,8 +88,7 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 
 		int offset = Arrays.binarySearch(element2.getSpectrumDataX(),element1.getSpectrumDataX()[0]);
 		
-		// If the data are different lengths then use the minimum for computing
-		// the ratios		
+		// If the data are different lengths then use the minimum for computing the ratios		
 		int n = Math.min(element1.getSpectrumDataX().length, element2.getSpectrumDataX().length-offset);
 		
 		float[] ratioX = new float[n];
