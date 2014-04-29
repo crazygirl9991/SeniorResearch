@@ -155,9 +155,9 @@ public class FitFileStore {
 		// fiber needs to have padded 0s if less than 100 //
 		String fiberStr = "";
 		if(fiber < 10)
-			fiberStr = "0";
-		else if(fiber < 100)
 			fiberStr = "00";
+		else if(fiber < 100)
+			fiberStr = "0";
 		
 		return "http://das.sdss.org/spectro/1d_26/" + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit";
 	}

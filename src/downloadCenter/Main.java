@@ -11,7 +11,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -42,7 +41,7 @@ public class Main implements ActionListener, DocumentListener {
 			boxLayout.setLayout( new BoxLayout( boxLayout, BoxLayout.PAGE_AXIS ) );
 
 			JPanel panel0 = new JPanel(), panel1 = new JPanel(), panel3 = new JPanel(), panel4 = new JPanel();
-			JLabel label0 = new JLabel( "Coordinates:\t" ), label1 = new JLabel( "Plate Information:\t" );
+			Label label0 = new Label( "Coordinates:\t", Main.FONT), label1 = new Label( "Plate Information:\t", Main.FONT );
 
 			// Create textfields for input
 			panel0.add( label0 );
@@ -242,19 +241,22 @@ public class Main implements ActionListener, DocumentListener {
 		switch ( event.getActionCommand() ) {
 		case "Download Files":
 			try {
-				FitFileStore store = new FitFileStore( element.getPlateInfo() );
-				store.Download();
-				new SwingWorker<Void, Integer>() {
-					@Override
-					protected Void doInBackground() throws Exception {
-						TableManager.updateTable();
-						_model.setData( TableManager.importTable() );
-						return null;
-					}
+				if( invalidPlateInfo.equals("none") ) {
+					FitFileStore store = new FitFileStore( element.getPlateInfo() );
+					store.Download();
+					new SwingWorker<Void, Integer>() {
+						@Override
+						protected Void doInBackground() throws Exception {
+							TableManager.updateTable();
+							_model.setData( TableManager.importTable() );
+							return null;
+						}
 
-					@Override
-					protected void done() { update(); }
-				}.execute();
+						@Override
+						protected void done() { update(); }
+					}.execute();
+				} else
+					Error_Dialogue(invalidPlateInfo);
 			} catch (Exception e) {
 				e.printStackTrace();
 				Error_Dialogue(invalidPlateInfo);

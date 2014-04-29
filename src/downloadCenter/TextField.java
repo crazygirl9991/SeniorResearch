@@ -43,7 +43,10 @@ public enum TextField implements FocusListener {
 	public void populate() { _textField.setText( _textField.getName() ); }
 	public void clear() { _textField.setText(""); }
 	
-	//TODO why would return null?
+	/**
+	 * Either returns the text currently in each field, or null if the text equals the 
+	 * value it should have normally, in order for the filters to work properly.
+	 */
 	public String getText() {
 		if(_textField.getText().equals(_textField.getName()))
 			return "";
