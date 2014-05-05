@@ -8,8 +8,9 @@ package downloadCenter;
  */
 public enum WorkingDirectory {
 	DOWNLOADS("/downloads/"),
+	ERRORS("/errors/"),
 	UNKNOWN("./"),
-	STUB("stub/");
+	STUB("/stub/");
 	
 	private String _workingDirectory = "";
 	
@@ -21,16 +22,6 @@ public enum WorkingDirectory {
 			e.printStackTrace();
 		}
 	}
-//	
-//	public void Instantiate() {
-//		try {
-//			String tempWD = _workingDirectory;
-//			this._workingDirectory = CommandExecutor.pwd() + tempWD;
-//			CommandExecutor.mkdir(_workingDirectory);
-//		} catch(Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
 	
 	public String toString() {
 		return _workingDirectory;

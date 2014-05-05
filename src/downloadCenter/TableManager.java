@@ -206,8 +206,11 @@ public class TableManager {
 		ArrayList<TableElement> table = new ArrayList<TableElement>();
 		try {
 			File pwd = new File(WorkingDirectory.DOWNLOADS.toString());
-			for (File current : pwd.listFiles())
-				table.add( FitFileStore.ParseFitFile(current) );
+			for (File current : pwd.listFiles()) {
+				TableElement temp = FitFileStore.ParseFitFile(current);
+				if(temp != null)
+					table.add( temp );
+			}
 			Collections.sort(table);
 			for(int i = 0; i < table.size(); i++)
 				table.get(i).setUniqueID(i);
@@ -222,6 +225,7 @@ public class TableManager {
 				}
 			}
 			writeTable(table);
+			CommandExecutor.remove(backup);
 		} catch (Exception e) {
 			restore(backup);
 			throw (new IOException("ERROR: Table IOS failed.", e));

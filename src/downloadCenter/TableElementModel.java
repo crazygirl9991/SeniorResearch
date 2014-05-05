@@ -83,4 +83,8 @@ public class TableElementModel extends AbstractTableModel {
 	public void setData(ArrayList<TableElement> data) {
 		_data = data;
 	}
+	
+	public ArrayList<TableElement> getData() {
+		return _data;
+	}
 }

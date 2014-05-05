@@ -83,17 +83,6 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		_parent = parent;
 		_ratio = ratio;
 		
-		// Spectrum plotter has control over coloring each table element for now, but the
-		// elements themselves keep track of their color for more organized persistence
-		// and the potential of adding auto-coloring to the TableElement class later.
-//		if (_elements.length == 1)
-//			elements[0].setColor(Color.red);
-//		else if (_elements.length == 2) {
-//			elements[0].setColor(Color.green.darker());
-//			elements[1].setColor(Color.blue);
-//		} else
-//			throw new Exception("ERROR: Attempting to plot invalid number of spectra.");
-
 		// set the size of the plots
 		setPreferredSize( new Dimension(SIZE_X, SIZE_Y) );
 

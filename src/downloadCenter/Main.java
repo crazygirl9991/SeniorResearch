@@ -24,7 +24,7 @@ public class Main implements ActionListener, DocumentListener {
 	public static final Font FONT = new Font( Font.SANS_SERIF, Font.PLAIN, 14 );
 	public static final Font FONT_BOLD = new Font( Font.SANS_SERIF, Font.BOLD, 14 );
 
-	JFrame _frame = new JFrame( "Spectrum Analysis Tool" );
+	private static JFrame _frame = new JFrame( "Spectrum Analysis Tool" );
 
 	private TableElementModel _model;
 	private JTable _list0;
@@ -59,7 +59,6 @@ public class Main implements ActionListener, DocumentListener {
 			for ( TextField curr : TextField.values() )
 				curr.getTextField().getDocument().addDocumentListener( this );
 			
-			TableManager.updateTable();
 			_model = new TableElementModel( TableManager.importTable() );
 			
 			_list0 = new JTable( _model );
@@ -95,95 +94,77 @@ public class Main implements ActionListener, DocumentListener {
 		}
 	}
 
-	/**
-	 * TODO 
-	 * 
-	 * @param details
-	 */
-	public void Error_Dialogue(String details) {
-		String windowTitle = "ERROR";
-		
-		JOptionPane.showMessageDialog( _frame, "Requested operation is invalid. " + details, windowTitle, JOptionPane.ERROR_MESSAGE );
-	}
-	
-	public void Plot_Options_Menu() {
+	public static void Plot_Options_Menu(JFrame frame, TableElement element, ArrayList<TableElement> data) {
 		String windowTitle = "Plot Options";
-		int[] selected = _list0.getSelectedRows();
 		
-		if( selected.length == 0 ) {
-			Error_Dialogue("Please select a spectrum.");
-		} else {
-			try {
-				PlottingInterface plotUI = new PlottingInterface();
-				ArrayList<String> plotTheseFiles = new ArrayList<String>();
-				TableElement element = _model.getRowFiltered(selected[0]);
+		try {
+			PlottingInterface plotUI = new PlottingInterface(data, element);
+			ArrayList<String> plotTheseFiles = new ArrayList<String>();
+			
+			if( !element.hasMatch() ) {
+				plotTheseFiles.add( element.getFilename() );
+			} else {
+				ArrayList<Integer> matchIndexList = element.getMatches();
+				matchIndexList.add( element.getUniqueID() );
 				
-				if( !element.hasMatch() ) {
-					plotTheseFiles.add( element.getFilename() );
-				} else {
-					ArrayList<Integer> matchIndexList = element.getMatches();
-					matchIndexList.add( element.getUniqueID() );
+				JPanel boxLayout = new JPanel(), panel0 = new JPanel(), panel1 = new JPanel();
+				boxLayout.setLayout( new BoxLayout( boxLayout, BoxLayout.PAGE_AXIS ) );
+				panel0.setLayout( new BoxLayout( panel0, BoxLayout.PAGE_AXIS ) );
+				panel1.setLayout( new BoxLayout( panel1, BoxLayout.PAGE_AXIS ) );
 					
-					JPanel boxLayout = new JPanel(), panel0 = new JPanel(), panel1 = new JPanel();
-					boxLayout.setLayout( new BoxLayout( boxLayout, BoxLayout.PAGE_AXIS ) );
-					panel0.setLayout( new BoxLayout( panel0, BoxLayout.PAGE_AXIS ) );
-					panel1.setLayout( new BoxLayout( panel1, BoxLayout.PAGE_AXIS ) );
-					
-					boxLayout.add( new Label("Please select at least 1 spectrum to plot. " +
+				boxLayout.add( new Label("Please select at least 1 spectrum to plot. " +
 											"The ratio between any 2 spectra will be calculated only if exactly 2 are selected.", 
 											Main.FONT) );
-		
-					boxLayout.add( new Label( "Spectra: ", Main.FONT_BOLD) );
-					boxLayout.add( new Label( "   " + element.toString().replace(TableManager.COLUMN_DELIMITER, "  |  "), Main.FONT) );
+				
+				boxLayout.add( new Label( "Spectra: ", Main.FONT_BOLD) );
+				boxLayout.add( new Label( "   " + element.toString().replace(TableManager.COLUMN_DELIMITER, "  |  "), Main.FONT) );
 					
 
-					panel0.add( new Label("SDSS I & II", Main.FONT_BOLD) );		
-					panel1.add( new Label("SDSS III", Main.FONT_BOLD) );
+				panel0.add( new Label("SDSS I & II", Main.FONT_BOLD) );		
+				panel1.add( new Label("SDSS III", Main.FONT_BOLD) );
 					
-					for(int index : matchIndexList) {
-						Boolean initialSelect = ( index == element.getUniqueID() );
-						TableElement temp = _model.getRowUnfiltered(index); 
+				for(int index : matchIndexList) {
+					Boolean initialSelect = ( index == element.getUniqueID() );
+					TableElement temp = data.get(index); 
 						
-						if( temp.getPlateInfo()[0] < FitFileStore.DATA_RELEASE )
-							panel0.add( new JCheckBox(temp.getFilename(), initialSelect) );
-						else
-							panel1.add( new JCheckBox( temp.getFilename(), initialSelect) );
+					if( temp.getPlateInfo()[0] < FitFileStore.DATA_RELEASE )
+						panel0.add( new JCheckBox(temp.getFilename(), initialSelect) );
+					else
+						panel1.add( new JCheckBox( temp.getFilename(), initialSelect) );
+				}
+						
+				boxLayout.add(panel0);
+				boxLayout.add(panel1);
+	
+				Object[] buttonOptions = {"Plot", "Cancel"};
+				int n = JOptionPane.showOptionDialog( frame, boxLayout, windowTitle, JOptionPane.YES_NO_OPTION, 
+						JOptionPane.QUESTION_MESSAGE,
+						null, //do not use a custom Icon 
+						buttonOptions, // use this array to title the buttons
+						buttonOptions[1]); // and set the default button
+	
+				if( n == 0 ) {
+					for(int i = 1; i < panel0.getComponentCount(); i++) {
+						JCheckBox current = (JCheckBox) panel0.getComponent(i);
+						if( current.isSelected() )
+							plotTheseFiles.add(current.getText() );
 					}
 						
-					boxLayout.add(panel0);
-					boxLayout.add(panel1);
-	
-					Object[] buttonOptions = {"Plot", "Cancel"};
-					int n = JOptionPane.showOptionDialog( _frame, boxLayout, windowTitle, JOptionPane.YES_NO_OPTION, 
-							JOptionPane.QUESTION_MESSAGE,
-							null, //do not use a custom Icon 
-							buttonOptions, // use this array to title the buttons
-							buttonOptions[1]); // and set the default button
-	
-					if( n == 0 ) {
-						for(int i = 1; i < panel0.getComponentCount(); i++) {
-							JCheckBox current = (JCheckBox) panel0.getComponent(i);
-							if( current.isSelected() )
-								plotTheseFiles.add(current.getText() );
-						}
-						
-						for(int i = 1; i < panel1.getComponentCount(); i++) {
-							JCheckBox current = (JCheckBox) panel1.getComponent(i);
-							if( current.isSelected() )
-								plotTheseFiles.add(current.getText() );
-						}
+					for(int i = 1; i < panel1.getComponentCount(); i++) {
+						JCheckBox current = (JCheckBox) panel1.getComponent(i);
+						if( current.isSelected() )
+							plotTheseFiles.add(current.getText() );
 					}
 				}
-				
-				if( plotTheseFiles.size() > 0 )
-					plotUI.display(plotTheseFiles);
-				else
-					Error_Dialogue("Please select at least one spectrum to plot.");
-			} catch(Exception e) {
-				e.printStackTrace();
 			}
+				
+			if( plotTheseFiles.size() > 0 )
+				plotUI.display(plotTheseFiles);
+			else
+				ErrorLogger.DIALOGUE(_frame, "Please select at least one spectrum to plot.");
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
-		
 	}
 
 	public String retrieveValidCoords(TableElement element) {
@@ -196,7 +177,7 @@ public class Main implements ActionListener, DocumentListener {
 			element.setCoords( coords );
 
 			invalidEntries = "none";
-		} else {
+		} else { 
 			// Handle invalid entries for error alert
 			if ( !TextField.RA.hasValidTextEntry() )
 				invalidEntries += TextField.RA + invalidMessage + TextField.RA.getText() + "\n";
@@ -239,37 +220,47 @@ public class Main implements ActionListener, DocumentListener {
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		TableElement element = new TableElement();
-
-		// String invalidCoords = retrieveValidCoords(element); //TODO invalid not working
-		String invalidPlateInfo = retrieveValidPlateInfo( element );
-
+		TableElement element;
+		
 		switch ( event.getActionCommand() ) {
 		case "Download Files":
+			element = new TableElement();
+			//TODO this is not functional! It won't update the table afterwards and just crashes the GUI
+			// String invalidCoords = retrieveValidCoords(element); //TODO invalid not working
+//			String invalidPlateInfo = retrieveValidPlateInfo( element );
+//			final int[] plateInfo = element.getPlateInfo();
 			try {
-				if( invalidPlateInfo.equals("none") ) {
-					FitFileStore store = new FitFileStore( element.getPlateInfo() );
-					store.Download();
-					new SwingWorker<Void, Integer>() {
-						@Override
-						protected Void doInBackground() throws Exception {
-							TableManager.updateTable();
-							_model.setData( TableManager.importTable() );
-							return null;
-						}
-
-						@Override
-						protected void done() { update(); }
-					}.execute();
-				} else
-					Error_Dialogue(invalidPlateInfo);
+				TableManager.updateTable();
+//				if( invalidPlateInfo.equals("none") ) {
+//					new SwingWorker<Void, Integer>() {
+//						@Override
+//						protected Void doInBackground() throws Exception { 
+//							FitFileStore store = new FitFileStore(plateInfo);
+//							store.Download();
+//							TableManager.updateTable();
+//							_model.setData( TableManager.importTable() );
+//							return null;
+//						}
+//
+//						@Override
+//						protected void done() { update(); }
+//					}.execute();
+//				} else
+//					ErrorLogger.DIALOGUE(_frame, invalidPlateInfo);
 			} catch (Exception e) {
 				e.printStackTrace();
-				Error_Dialogue(invalidPlateInfo);
+				//ErrorLogger.DIALOGUE(_frame, invalidPlateInfo);
 			}
 			break;
 		case "Review Spectra":
-			Plot_Options_Menu();
+			int[] selected = _list0.getSelectedRows();
+			element = _model.getRowFiltered(selected[0]);
+			
+			if( selected.length == 0 ) {
+				ErrorLogger.DIALOGUE(_frame, "Please select a spectrum.");
+			} else {
+				Plot_Options_Menu( _frame, element, _model.getData() );
+			}
 			break;
 		case "toggle":
 			update();

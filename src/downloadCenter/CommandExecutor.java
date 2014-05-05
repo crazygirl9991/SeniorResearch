@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.FileAlreadyExistsException;
@@ -27,8 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class CommandExecutor {
 
 	/**
-	 * TODO make portable A function designed to access a command line and
-	 * download files using WGET.
+	 * TODO
 	 * 
 	 * @param wgetFilePath
 	 *            - should be a ".lis" file with URLs WGET can locate and
@@ -36,10 +34,9 @@ public class CommandExecutor {
 	 * @param destinationDirectory
 	 *            - should be an already existing directory (including filepath
 	 *            if necessary).
-	 * @throws InterruptedException
-	 * @throws IOException
+	 * @throws InterruptedException 
 	 */
-	public static void get(ArrayList<String> getUrls, final String destinationDirectory) throws Exception {
+	public static void get(ArrayList<String> getUrls, final String destinationDirectory) throws InterruptedException {
 		ExecutorService pool = Executors.newFixedThreadPool(30);
 		for (final String str : getUrls) {
 			pool.submit(new Runnable() {
@@ -54,9 +51,9 @@ public class CommandExecutor {
 						Files.copy(connect.getInputStream(), destination.toPath()); //StandardCopyOption.REPLACE_EXISTING
 						connect.disconnect();
 					} catch (FileAlreadyExistsException f) {
-						//TODO log
+						 
 					} catch (Exception e) {
-						throw (new UnsupportedOperationException("ERROR: Can't retrieve files.", e));
+						ErrorLogger.update("ERROR: Can't retrieve files.", e);
 					}
 				}
 			});
@@ -73,14 +70,13 @@ public class CommandExecutor {
 	 *            - source file, including path if necessary
 	 * @param target
 	 *            - target file name and directory path
-	 * @throws IOException
 	 */
-	public static void copy(String source, String target) throws UnsupportedOperationException {
+	public static void copy(String source, String target) {
 		try {
 			File file1 = new File(source), file2 = new File(target);
 			file1.renameTo(file2);
 		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: Can't copy file " + source + " as file " + target, e));
+			ErrorLogger.update("ERROR: Can't copy file " + source + " as file " + target, e);
 		}
 	}
 
@@ -89,14 +85,13 @@ public class CommandExecutor {
 	 * 
 	 * @param filename
 	 *            - should include path if necessary.
-	 * @throws IOException
 	 */
-	public static void remove(String filename) throws UnsupportedOperationException {
+	public static void remove(String filename) {
 		try {
 			File file = new File(filename);
 			file.delete();
 		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: Can't remove file " + filename, e));
+			ErrorLogger.update("ERROR: Can't remove file " + filename, e);
 		}
 	}
 
@@ -105,36 +100,35 @@ public class CommandExecutor {
 	 * 
 	 * @param directoryName
 	 *            - should include path if necessary.
-	 * @throws IOException
 	 */
-	public static void mkdir(String directoryName) throws UnsupportedOperationException {
+	public static void mkdir(String directoryName) {
 		try {
 			File dir = new File(directoryName);
 			dir.mkdirs();
 		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: Could not make file or directory.", e));
+			ErrorLogger.update("ERROR: Could not make file or directory.", e);
 		}
 	}
 
 	/**
 	 * Returns the current working directory.
 	 * 
-	 * @throws IOException
 	 */
-	public static String pwd() throws UnsupportedOperationException {
+	public static String pwd() {
 		String pwd = "";
 		try {
 			pwd = System.getProperty("user.dir");
 		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: PWD command failed.", e));
+			ErrorLogger.update("ERROR: PWD command failed.", e);
 		}
+		
 		return pwd;
 	}
 
 	/**
 	 * TODO document
 	 */
-	public static ArrayList<String> importFile(String filename) throws UnsupportedOperationException {
+	public static ArrayList<String> importFile(String filename) {
 		ArrayList<String> strings = new ArrayList<String>();
 
 		try {
@@ -145,7 +139,7 @@ public class CommandExecutor {
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
-			throw (new UnsupportedOperationException("ERROR: Can't import file: " + filename, e));
+			ErrorLogger.update("ERROR: Can't import file: " + filename, e);
 		}
 
 		return strings;
@@ -155,16 +149,19 @@ public class CommandExecutor {
 	 * TODO document
 	 * 
 	 * @param filename
-	 * @throws UnsupportedOperationException
 	 */
-	public static void createFile(String filename) throws UnsupportedOperationException {
+	public static void write(String filename, ArrayList<String> lines) {
 		try {
-			String output = "## File has not yet been written ##";
-			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-			writer.write(output);
+			BufferedWriter writer = new BufferedWriter( new FileWriter(filename) );
+			
+			for(String current : lines) {
+				writer.write(current);
+				writer.newLine();
+			}
+			
 			writer.close();
 		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: Can't create file: " + filename, e));
+			ErrorLogger.update("ERROR: Can't create file: " + filename, e);
 		}
 	}
 }

@@ -92,9 +92,14 @@ public class FitFileStore {
 
 			// These header labels need to be read in this order only  //
 			// so that the data can be stored in the table accurately. //
-			// coords={RAOBJ,DECOBJ}; plateInfo={MJD,PLATEID,FIBERID}  // 
-			coords[0] = header.getDoubleValue("RAOBJ");
-			coords[1] = header.getDoubleValue("DECOBJ");
+			// coords={RAOBJ,DECOBJ}; plateInfo={MJD,PLATEID,FIBERID}  //
+//			if(MJD < 55000){
+//				coords[0] = header.getDoubleValue("RAOBJ");
+//				coords[1] = header.getDoubleValue("DECOBJ");
+//			} else {
+				coords[0] = header.getDoubleValue("PLUG_RA");
+				coords[1] = header.getDoubleValue("PLUG_DEC");
+			//}
 			plateInfo[0] = header.getIntValue("MJD");
 			plateInfo[1] = header.getIntValue("PLATEID");
 			plateInfo[2] = header.getIntValue("FIBERID");
@@ -102,29 +107,30 @@ public class FitFileStore {
 			element.setCoords(coords);
 			element.setPlateInfo(plateInfo);
 
-			if (needSpectrum) {
-				BasicHDU spectralDataHeader = fitFileImport.getHDU(0);
-
-				// read these two coefficients from the header
-				double c0 = header.getDoubleValue("COEFF0");
-				double c1 = header.getDoubleValue("COEFF1");
-
-				float[] dataX, dataY;
-
-				// read in the flux data
-				dataY = ((float[][]) spectralDataHeader.getData().getData())[0];
-
-				// generate the wavelength data
-				dataX = new float[dataY.length];
-				for (int i = 0; i < dataX.length; i++)
-					dataX[i] = (float) Math.pow(10, (c0 + c1 * i));
-
-				element.setSpectrumData(dataX, dataY);
-			}
+//			if (needSpectrum) {
+//				BasicHDU spectralDataHeader = fitFileImport.getHDU(0);
+//
+//				// read these two coefficients from the header
+//				double c0 = header.getDoubleValue("COEFF0");
+//				double c1 = header.getDoubleValue("COEFF1");
+//
+//				float[] dataX, dataY;
+//
+//				// read in the flux data
+//				dataY = ((float[][]) spectralDataHeader.getData().getData())[0];
+//
+//				// generate the wavelength data
+//				dataX = new float[dataY.length];
+//				for (int i = 0; i < dataX.length; i++)
+//					dataX[i] = (float) Math.pow(10, (c0 + c1 * i));
+//
+//				element.setSpectrumData(dataX, dataY);
+//			}
 			fitFileImport.getStream().close();
 
 		} catch (Exception e) {
-			throw (new IOException("Could not read in data for fit file: " + spectrumFileName, e));
+			ErrorLogger.update("Could not load file: " + spectrumFileName, e);
+			element = null;
 		}
 		
 		return element;
@@ -153,14 +159,17 @@ public class FitFileStore {
 		 * Where MJD = 53166, plate = 1615, and fiber = 513
 		 */
 		// fiber needs to have padded 0s if less than 100 //
+		//TODO there are too different ways to pad this omg please reorganize
 		String fiberStr = "";
 		if(fiber < 10)
-			fiberStr = "00";
+			fiberStr = "000";
 		else if(fiber < 100)
+			fiberStr = "00";
+		else if(fiber < 1000)
 			fiberStr = "0";
 		
 		//return "http://das.sdss.org/spectro/1d_26/" + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit";
-		return "http://data.sdss3.org/sas/dr10/boss/spectro/data/" + plate + "/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit";
+		return "http://data.sdss3.org/sas/dr10/boss/spectro/redux/v5_5_12/spectra/" + plate + "/spec-" + plate + "-" + MJD + "-" + fiberStr + fiber + ".fits";
 	}
 	
 	/**

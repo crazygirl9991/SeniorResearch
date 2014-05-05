@@ -25,9 +25,17 @@ import javax.swing.event.ChangeListener;
  * 
  */
 public class PlottingInterface implements ActionListener, ChangeListener {
-	FitFileStore fileStore = new FitFileStore();
-	private ArrayList<SpectrumPlotter> plots = new ArrayList<SpectrumPlotter>();
-
+	JFrame _frame = new JFrame("Plotting Interface");
+	FitFileStore _fileStore = new FitFileStore();
+	private ArrayList<SpectrumPlotter> _plots = new ArrayList<SpectrumPlotter>();
+	private ArrayList<TableElement> _data;
+	private TableElement _current;
+	
+	public PlottingInterface(ArrayList<TableElement> data, TableElement current) { 
+		_data = data;
+		_current = current;
+	}
+	
 	/**
 	 * TODO
 	 * 
@@ -38,27 +46,26 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 
 		TableElement[] elements = new TableElement[files.size()];
 		for ( int i = 0; i < files.size(); i++ ) {
-			elements[i] = FitFileStore.ParseFitFile( files.get( i ) );
-			elements[i].setColor( Color.getHSBColor( (float) ( i + 1 ) / ( elements.length + 1 ), 1, 1 ) );
+			elements[i] = FitFileStore.ParseFitFile( files.get(i) );
+			elements[i].setColor( Color.getHSBColor( (float) (i + 1) / (elements.length + 1), 1, (float) 0.7) );
 		}
 
 		// Create and setup a JFrame
-		JFrame frame = new JFrame( "Plotting Interface" );
-		frame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
-		Container content = frame.getContentPane();
+		_frame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
+		Container content = _frame.getContentPane();
 
 		// Create a panel to hold both of the plots
 		JPanel panel = new JPanel();
 		panel.setLayout( new BoxLayout( panel, BoxLayout.Y_AXIS ) );
 
-		plots.add( new SpectrumPlotter( elements, this, false ) );
-		panel.add( plots.get( 0 ) );
+		_plots.add( new SpectrumPlotter( elements, this, false ) );
+		panel.add( _plots.get( 0 ) );
 
 		if ( elements.length == 2 ) {
 			TableElement ratio = calculateRatio( elements[0], elements[1] );
 			ratio.setColor( Color.red );
-			plots.add( new SpectrumPlotter( new TableElement[] { ratio }, this, true ) );
-			panel.add( plots.get( 1 ) );
+			_plots.add( new SpectrumPlotter( new TableElement[] {ratio}, this, true ) );
+			panel.add( _plots.get(1) );
 		}
 		content.add( panel, BorderLayout.CENTER );
 
@@ -83,12 +90,12 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 		right.setLayout( new BoxLayout( right, BoxLayout.Y_AXIS ) );
 		for ( TableElement curr : elements )
 			right.add( createLegend( curr ) );
-		frame.add( right, BorderLayout.EAST );
+		_frame.add( right, BorderLayout.EAST );
 
 		// Show the window
-		frame.pack();
-		frame.setLocationRelativeTo( null );
-		frame.setVisible( true );
+		_frame.pack();
+		_frame.setLocationRelativeTo( null );
+		_frame.setVisible( true );
 	}
 
 	private TableElement calculateRatio(TableElement element1, TableElement element2) {
@@ -98,7 +105,7 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 		TableElement first;
 		if ( element2.getSpectrumDataX()[0] <= element1.getSpectrumDataX()[0] ) {
 			second = element1;
-			first = element2;
+			first = element2; 
 		} else {
 			second = element2;
 			first = element1;
@@ -181,33 +188,88 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
+		int endIndex;
+		
 		switch ( event.getActionCommand() ) {
 		case "Next":
-			// TODO stuff...
-			System.out.println( "Next" );
+			endIndex = findNextMatch();
+			
+			if(endIndex < 0)
+				ErrorLogger.DIALOGUE(_frame, "No more matches found!");
+			else
+				Main.Plot_Options_Menu(_frame, _data.get(endIndex), _data);
+			
 			break;
 		case "Previous":
-			// TODO stuff...
-			System.out.println( "Previous" );
+			endIndex = findPreviousMatch();
+			
+			if(endIndex < 0)
+				ErrorLogger.DIALOGUE(_frame, "No more matches found!");
+			else
+				Main.Plot_Options_Menu(_frame, _data.get(endIndex), _data);
+			
 			break;
 		}
+	}
+	
+	private int findNextMatch() {
+		int startIndex = _current.getUniqueID();
+		int endIndex = -1;
+		
+		if( startIndex < _data.size() ) {
+		
+			// check second half of list for a match
+			for(int i = startIndex+1; i < _data.size(); i++)
+				if( _data.get(i).hasMatch() )
+					endIndex = i;
+		
+			// if none was found, then search the first half for a match
+			if(endIndex < 0) {
+				for(int i = 0; i < startIndex; i++)
+					if( _data.get(i).hasMatch() )
+						endIndex = i;
+			}
+		}
+		
+		return endIndex;
+	}
+	
+	private int findPreviousMatch() {
+		int startIndex = _current.getUniqueID();
+		int endIndex = -1;
+		
+		if( startIndex < _data.size() ) {
+			// search first half of list in reverse for a match
+			for(int i = startIndex-1; i >= 0; i--)
+				if( _data.get(i).hasMatch() )
+					endIndex = i;
+		
+			// if none was found, then search the second half
+			if(endIndex < 0) {
+				for(int i = _data.size(); i > startIndex; i--)
+					if( _data.get(i).hasMatch() )
+						endIndex = i;
+			}
+		}
+		
+		return endIndex;
 	}
 
 	@Override
 	public void stateChanged(ChangeEvent ce) {
 		JCheckBox smoothed = (JCheckBox) ce.getSource();
-		for ( SpectrumPlotter curr : plots )
+		for ( SpectrumPlotter curr : _plots )
 			curr.setSmoothed( smoothed.isSelected() );
 		redrawAllPlots();
 	}
 
 	public void redrawAllPlots() {
-		for ( SpectrumPlotter curr : plots )
+		for ( SpectrumPlotter curr : _plots )
 			curr.redraw();
 	}
 
 	public void updateWindow(float center, float zoom) {
-		for ( SpectrumPlotter curr : plots )
+		for ( SpectrumPlotter curr : _plots )
 			curr.updateWindow( center, zoom );
 		redrawAllPlots();
 	}
@@ -215,12 +277,12 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 	public void repaintAllPlots() {
 		// this is a built in function which calls upon paintComponent() from SpectrumPlotter,
 		// which is overridden for this purpose
-		for ( SpectrumPlotter curr : plots )
+		for ( SpectrumPlotter curr : _plots )
 			curr.repaint();
 	}
 
 	public void updateTrace(float currenttrace) {
-		for ( SpectrumPlotter curr : plots )
+		for ( SpectrumPlotter curr : _plots )
 			curr.updateTrace( currenttrace );
 		repaintAllPlots();
 	}
