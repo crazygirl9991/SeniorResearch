@@ -107,25 +107,25 @@ public class FitFileStore {
 			element.setCoords(coords);
 			element.setPlateInfo(plateInfo);
 
-//			if (needSpectrum) {
-//				BasicHDU spectralDataHeader = fitFileImport.getHDU(0);
-//
-//				// read these two coefficients from the header
-//				double c0 = header.getDoubleValue("COEFF0");
-//				double c1 = header.getDoubleValue("COEFF1");
-//
-//				float[] dataX, dataY;
-//
-//				// read in the flux data
-//				dataY = ((float[][]) spectralDataHeader.getData().getData())[0];
-//
-//				// generate the wavelength data
-//				dataX = new float[dataY.length];
-//				for (int i = 0; i < dataX.length; i++)
-//					dataX[i] = (float) Math.pow(10, (c0 + c1 * i));
-//
-//				element.setSpectrumData(dataX, dataY);
-//			}
+			if (needSpectrum) {
+				BasicHDU spectralDataHeader = fitFileImport.getHDU(0);
+
+				// read these two coefficients from the header
+				double c0 = header.getDoubleValue("COEFF0");
+				double c1 = header.getDoubleValue("COEFF1");
+
+				float[] dataX, dataY;
+
+				// read in the flux data
+				dataY = ((float[][]) spectralDataHeader.getData().getData())[0];
+
+				// generate the wavelength data
+				dataX = new float[dataY.length];
+				for (int i = 0; i < dataX.length; i++)
+					dataX[i] = (float) Math.pow(10, (c0 + c1 * i));
+
+				element.setSpectrumData(dataX, dataY);
+			}
 			fitFileImport.getStream().close();
 
 		} catch (Exception e) {
