@@ -35,10 +35,10 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 
 	private int SIZE_X = 800; // width of the plots in pixels
 	private int SIZE_Y = 300; // height of the plots in pixels
-	
+
 	private final float DIVISION_X = 10; // number of divisions along the x axis
 	private final float DIVISION_Y = 10; // number of divisions along the y axis
-	
+
 	// margins around the graph
 	private int _leftMargin;
 	private int _rightMargin;
@@ -73,18 +73,18 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	private ArrayList<ArrayList<Float>> xdata;
 
 	private ArrayList<ArrayList<Float>> ydata;
-	
+
 	private PlottingInterface _parent;
-	
+
 	private boolean _ratio;
 
 	public SpectrumPlotter(TableElement[] elements, PlottingInterface parent, boolean ratio) throws Exception {
 		_elements = elements;
 		_parent = parent;
 		_ratio = ratio;
-		
+
 		// set the size of the plots
-		setPreferredSize( new Dimension(SIZE_X, SIZE_Y) );
+		setPreferredSize(new Dimension(SIZE_X, SIZE_Y));
 
 		addComponentListener(this);
 
@@ -120,7 +120,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	 * Convert graph y coordinate into pixel value
 	 */
 	private float pixelY(float y) {
-		return _topMargin + (SIZE_Y - _bottomMargin - _topMargin) * (1 - (y - minY) / (maxY - minY));
+		return _topMargin + (SIZE_Y - _bottomMargin - _topMargin) * (1 - (Math.max(minY, Math.min(maxY, y)) - minY) / (maxY - minY));
 	}
 
 	private float divX(int i) {
@@ -142,7 +142,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		Graphics2D g2 = (Graphics2D) graphics;
 		FontMetrics fontMetrics = g2.getFontMetrics();
 		int strheight = fontMetrics.getAscent() - fontMetrics.getDescent();
-		
+
 		for (int i = 0; i < xdata.size(); i++) {
 			g2.setColor(_elements[i].getColor());
 			int index = Collections.binarySearch(xdata.get(i), currenttrace);
@@ -153,7 +153,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 			// create the circle at the y coordinate on the plot which corresponds with the x of the curser
 			g2.fill(new Ellipse2D.Float(pixelX(xdata.get(i).get(index)) - DOT_RADIUS, pixelY(ydata.get(i).get(index)) - DOT_RADIUS, 2 * DOT_RADIUS,
 					2 * DOT_RADIUS));
-			
+
 			// create the label in the corner to display current curser location
 			String xcoord = "X: " + String.format("%01.3f", xdata.get(i).get(index));
 			g2.drawString(xcoord, SIZE_X - fontMetrics.stringWidth(xcoord), (2 * i + 1) * (strheight + GAP));
@@ -216,6 +216,10 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 				ydata.get(i).add(y);
 			}
 		}
+		if (_ratio) {
+			minY = (float) Math.max(0.2, minY);
+			maxY = (float) Math.min(5.0, maxY);
+		}
 
 		// Create the bitmap and draw the plot
 		bitmap = new BufferedImage(SIZE_X, SIZE_Y, BufferedImage.TYPE_INT_ARGB);
@@ -241,23 +245,21 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		for (int i = 0; i < _elements.length; i++) {
 			g2.setColor(_elements[i].getColor());
 			for (int j = 0; j < xdata.get(i).size() - 1; j++) {
-				g2.draw(new Line2D.Float( pixelX( xdata.get(i).get(j) ),
-										  pixelY( ydata.get(i).get(j) ),
-										  pixelX( xdata.get(i).get(j+1) ),
-										  pixelY( ydata.get(i).get(j+1) ) ) );
+				g2.draw(new Line2D.Float(pixelX(xdata.get(i).get(j)), pixelY(ydata.get(i).get(j)), pixelX(xdata.get(i).get(j + 1)), pixelY(ydata.get(i).get(
+						j + 1))));
 			}
 		}
 
 		// draw the axes
 		g2.setColor(Color.black);
-		g2.draw( new Line2D.Float( pixelX(minX), pixelY(minY), pixelX(maxX), pixelY(minY) ) );
-		g2.draw( new Line2D.Float( pixelX(minX), pixelY(minY), pixelX(minX), pixelY(maxY) ) );
+		g2.draw(new Line2D.Float(pixelX(minX), pixelY(minY), pixelX(maxX), pixelY(minY)));
+		g2.draw(new Line2D.Float(pixelX(minX), pixelY(minY), pixelX(minX), pixelY(maxY)));
 		String xaxislabel = "Wavelength (\u00C5)";
 		g2.drawString(xaxislabel, pixelX((maxX + minX) / 2) - fontMetrics.stringWidth(xaxislabel) / 2, pixelY(minY) + 3 * GAP + 2 * strheight);
 
 		if (_ratio) {
-			g2.setStroke( new BasicStroke(0, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1f, new float[] { 5 }, 0) );
-			g2.draw( new Line2D.Float(pixelX(minX), pixelY(1), pixelX(maxX), pixelY(1) ) );
+			g2.setStroke(new BasicStroke(0, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1f, new float[] { 5 }, 0));
+			g2.draw(new Line2D.Float(pixelX(minX), pixelY(1), pixelX(maxX), pixelY(1)));
 			AffineTransform identity = g2.getTransform();
 			g2.transform(AffineTransform.getRotateInstance(-Math.PI / 2, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2, pixelY((maxY + minY) / 2)));
 			String yaxislabel = "Ratio Between Flux";
@@ -269,11 +271,11 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 			AffineTransform identity = g2.getTransform();
 			g2.transform(AffineTransform.getRotateInstance(-Math.PI / 2, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2, pixelY((maxY + minY) / 2)));
 			AttributedString yaxislabel = new AttributedString("Flux (10-17 erg/(cm*s2*\u00C5))");
-			
+
 			yaxislabel.addAttribute(TextAttribute.FONT, Main.FONT);
 			yaxislabel.addAttribute(TextAttribute.SUPERSCRIPT, TextAttribute.SUPERSCRIPT_SUPER, 8, 11);
 			yaxislabel.addAttribute(TextAttribute.SUPERSCRIPT, TextAttribute.SUPERSCRIPT_SUPER, 21, 22);
-			
+
 			AttributedCharacterIterator iterator = yaxislabel.getIterator();
 			float yaxislabelwidth = (float) fontMetrics.getStringBounds(iterator, iterator.getBeginIndex(), iterator.getEndIndex(), g2).getWidth();
 			g2.drawString(iterator, pixelX(minX) - 3 * GAP - maxWidth - strheight / 2 - yaxislabelwidth / 2, pixelY((maxY + minY) / 2) + strheight / 2);
@@ -309,7 +311,8 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	}
 
 	/**
-	 * This function is used when everything is resized (such as when a window is maximized). 
+	 * This function is used when everything is resized (such as when a window
+	 * is maximized).
 	 */
 	@Override
 	public void componentResized(ComponentEvent ce) {
@@ -338,7 +341,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 			break;
 		}
 		center = Math.max((MAX_X - MIN_X) / zoom + MIN_X, Math.min(MAX_X - (MAX_X - MIN_X) / zoom, center));
-		_parent.updateWindow(center,zoom);
+		_parent.updateWindow(center, zoom);
 	}
 
 	@Override

@@ -3,8 +3,11 @@ package downloadCenter;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 
 import javax.swing.BoxLayout;
@@ -15,7 +18,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingWorker;
+import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -26,9 +29,12 @@ public class Main implements ActionListener, DocumentListener {
 
 	private static JFrame _frame = new JFrame( "Spectrum Analysis Tool" );
 
-	private TableElementModel _model;
+	private static TableElementModel _model;
 	private JTable _list0;
-	JCheckBox _filter = new JCheckBox( "Only display spectra with matches", false );
+	static JCheckBox _filter = new JCheckBox( "Only display spectra with matches", false );
+	
+	private JTextField _status;
+	private JTextField _file;
 
 	public void Main_Menu() {
 		// Create and setup a JFrame
@@ -59,12 +65,12 @@ public class Main implements ActionListener, DocumentListener {
 			for ( TextField curr : TextField.values() )
 				curr.getTextField().getDocument().addDocumentListener( this );
 
-			try {
+//			try {
 				_model = new TableElementModel( TableManager.importTable() );
-			} catch ( Exception e ) {
-				TableManager.updateTable();
-				_model = new TableElementModel( TableManager.importTable() );
-			}
+//			} catch ( Exception e ) {
+//				TableManager.updateTable();
+//				_model = new TableElementModel( TableManager.importTable() );
+//			}
 			_list0 = new JTable( _model );
 			JScrollPane scroll = new JScrollPane( _list0 );
 			panel3.add( scroll );
@@ -78,6 +84,13 @@ public class Main implements ActionListener, DocumentListener {
 
 			panel4.add( button0 );
 			panel4.add( button1 );
+			
+			
+			JPanel panel5 = new JPanel(new GridLayout(1,2));
+			_status = new JTextField(STATUS.IDLE.toString());
+			_file = new JTextField();
+			panel5.add(_status);
+			panel5.add(_file);
 
 			// Add everything to the main box layout
 			boxLayout.add( panel0 );
@@ -85,6 +98,7 @@ public class Main implements ActionListener, DocumentListener {
 			boxLayout.add( _filter );
 			boxLayout.add( panel3 );
 			boxLayout.add( panel4 );
+			boxLayout.add( panel5 );
 
 			content.add( boxLayout, BorderLayout.SOUTH );
 
@@ -228,25 +242,29 @@ public class Main implements ActionListener, DocumentListener {
 			//TODO this is not functional! It won't update the table afterwards and just crashes the GUI
 			// String invalidCoords = retrieveValidCoords(element); //TODO invalid not working
 			String invalidPlateInfo = retrieveValidPlateInfo( element );
-			final int[] plateInfo = element.getPlateInfo();
+			int[] plateInfo = element.getPlateInfo();
 			try {
 				//TableManager.updateTable();
 				if ( invalidPlateInfo.equals( "none" ) ) {
-					new SwingWorker<Void, Integer>() {
+					final BackgroundDownload worker = new BackgroundDownload(plateInfo);
+					worker.addPropertyChangeListener(new PropertyChangeListener(){
 						@Override
-						protected Void doInBackground() throws Exception {
-							FitFileStore store = new FitFileStore( plateInfo );
-							store.Download();
-							TableManager.updateTable();
-							_model.setData( TableManager.importTable() );
-							return null;
+						public void propertyChange(PropertyChangeEvent e) {
+							_status.setText(worker.getStatus().toString());
+							_file.setText(worker.getFile());
+							_frame.repaint();
+//							switch(e.getPropertyName())
+//							{
+//							case "status":
+//								System.out.println("Status change: "+e.getOldValue()+"->"+e.getNewValue());
+//								break;
+//							case "file":
+//								System.out.println("File change: "+e.getOldValue()+"->"+e.getNewValue());
+//								break;
+//							}
 						}
-
-						@Override
-						protected void done() {
-							update();
-						}
-					}.execute();
+						
+					});
 				} else
 					ErrorLogger.DIALOGUE( _frame, invalidPlateInfo );
 			} catch ( Exception e ) {
@@ -284,8 +302,12 @@ public class Main implements ActionListener, DocumentListener {
 	public void removeUpdate(DocumentEvent de) {
 		update();
 	}
-
-	public void update() {
+	
+	public static void setData(ArrayList<TableElement> table){
+		_model.setData(table);
+		update();
+	}
+	public static void update() {
 		_model.filter( TextField.RA.getText(), TextField.DEC.getText(), TextField.MJD.getText(), TextField.PLATE.getText(), TextField.FIBER.getText(),
 				_filter.isSelected() );
 	}

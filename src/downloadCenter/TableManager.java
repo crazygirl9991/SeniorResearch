@@ -37,7 +37,7 @@ public class TableManager {
 	 * @return
 	 * @throws IOException
 	 */
-	private static String makeBackup() throws IOException {
+	public static String makeBackup() throws IOException {
 		String backupFileName = renameForBackup(TABLE_NAME);
 
 		try {
@@ -82,7 +82,7 @@ public class TableManager {
 	 * @param ce
 	 * @throws IOException
 	 */
-	private static void restore(String filename) throws IOException {
+	public static void restore(String filename) throws IOException {
 		try {
 			CommandExecutor.copy(filename, TABLE_NAME);
 			CommandExecutor.remove(filename);
@@ -126,7 +126,7 @@ public class TableManager {
 	 * @param filename
 	 * @param data
 	 */
-	private static void writeTable(ArrayList<TableElement> table) throws Exception {
+	public static void writeTable(ArrayList<TableElement> table) throws Exception {
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(TABLE_NAME));
 
@@ -196,39 +196,4 @@ public class TableManager {
 //			throw (new IOException("ERROR: Table IOS failed.", e));
 //		}
 //	}
-
-	/**
-	 * TODO
-	 * @throws IOException
-	 */
-	public static void updateTable() throws IOException {
-		String backup = makeBackup();
-		ArrayList<TableElement> table = new ArrayList<TableElement>();
-		try {
-			File pwd = new File(WorkingDirectory.DOWNLOADS.toString());
-			for (File current : pwd.listFiles()) {
-				TableElement temp = FitFileStore.ParseFitFile(current);
-				if(temp != null)
-					table.add( temp );
-			}
-			Collections.sort(table);
-			for(int i = 0; i < table.size(); i++)
-				table.get(i).setUniqueID(i);
-			for(int i = 0; i < table.size(); i++) {
-				TableElement tei = table.get(i);
-				for(int j = i + 1; j < table.size(); j++) {
-					TableElement tej = table.get(j);
-					if( tei.isMatch(tej) ) {
-						tei.addMatch(tej);
-						tej.addMatch(tei);
-					}
-				}
-			}
-			writeTable(table);
-			CommandExecutor.remove(backup);
-		} catch (Exception e) {
-			restore(backup);
-			throw (new IOException("ERROR: Table IOS failed.", e));
-		}
-	}
 }
