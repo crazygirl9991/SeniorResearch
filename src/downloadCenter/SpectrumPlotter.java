@@ -62,13 +62,18 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	private Float maxX; // maximum x of view window
 	private Float minY; // minimum y of view window
 	private Float maxY; // maximum y of view window
-	private float zoom = 2;
-	private float center;
+	private float _zoom;
+	private float _centerX;
+	private float _centerY;
+	private Integer prevX = null;
+//	private Integer prevY = null;
+	
 	private BufferedImage bitmap; // bitmap used for double buffering
 
 	private float currenttrace = 0;
 
 	private boolean smoothdata;
+	private boolean capdata;
 
 	private ArrayList<ArrayList<Float>> xdata;
 
@@ -83,13 +88,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		_parent = parent;
 		_ratio = ratio;
 
-		// set the size of the plots
-		setPreferredSize(new Dimension(SIZE_X, SIZE_Y));
-
-		addComponentListener(this);
-
-		addMouseListener(this);
-		addMouseMotionListener(this);
+		init();
 
 		// find the min and max of all of the data
 		float min_X = _elements[0].getSpectrumDataX()[0];
@@ -105,8 +104,51 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		}
 		MIN_X = min_X;
 		MAX_X = max_X;
-		center = (MAX_X + MIN_X) / 2;
-		redraw();
+		
+		_zoom = 2;
+		_centerX = (MAX_X + MIN_X) / 2;
+		_centerY = 0;
+		_parent.updateWindow(_centerX,_centerY,_zoom);
+		autosize();
+	}
+
+	public SpectrumPlotter(TableElement[] elements, PlottingInterface parent, boolean ratio, float centerX, float centerY, float zoom) throws Exception {
+		_elements = elements;
+		_parent = parent;
+		_ratio = ratio;
+		
+		init();
+
+		// find the min and max of all of the data
+		float min_X = _elements[0].getSpectrumDataX()[0];
+		float max_X = min_X;
+		for (int i = 0; i < _elements.length; i++) {
+			for (int j = 0; j < _elements[i].getSpectrumDataX().length; j++) {
+				float x = _elements[i].getSpectrumDataX()[j];
+				if (x < min_X)
+					min_X = x;
+				if (x > max_X)
+					max_X = x;
+			}
+		}
+		MIN_X = min_X;
+		MAX_X = max_X;
+		
+		_zoom = zoom;
+		_centerX = centerX;
+		_centerY = centerY;
+		
+		autosize();
+	}
+
+	public void init() {
+		// set the size of the plots
+		setPreferredSize(new Dimension(SIZE_X, SIZE_Y));
+
+		addComponentListener(this);
+
+		addMouseListener(this);
+		addMouseMotionListener(this);
 	}
 
 	/**
@@ -164,63 +206,6 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	}
 
 	public void redraw() {
-		float minbound = center - (MAX_X - MIN_X) / zoom;
-		float maxbound = center + (MAX_X - MIN_X) / zoom;
-
-		xdata = new ArrayList<ArrayList<Float>>();
-		ydata = new ArrayList<ArrayList<Float>>();
-		minX = null;
-		maxX = null;
-		minY = null;
-		maxY = null;
-
-		for (int i = 0; i < _elements.length; i++) {
-			int len = _elements[i].getSpectrumDataX().length;
-			if (smoothdata)
-				len -= 2 * SMOOTH_RADIUS;
-			xdata.add(new ArrayList<Float>());
-			ydata.add(new ArrayList<Float>());
-			for (int j = 0; j < len; j++) {
-				float x = 0, y = 0;
-				if (smoothdata) {
-					x = _elements[i].getSpectrumDataX()[j + SMOOTH_RADIUS];
-					if (x < minbound || x > maxbound)
-						continue;
-					for (int l = 0; l <= SMOOTH_RADIUS * 2; l++) {
-						y += _elements[i].getSpectrumDataY()[j + l] / (2 * SMOOTH_RADIUS + 1);
-					}
-				} else {
-					x = _elements[i].getSpectrumDataX()[j];
-					if (x < minbound || x > maxbound)
-						continue;
-					y = _elements[i].getSpectrumDataY()[j];
-				}
-				// find the min and max for the current window
-				if (minX == null)
-					minX = x;
-				if (maxX == null)
-					maxX = x;
-				if (minY == null)
-					minY = y;
-				if (maxY == null)
-					maxY = y;
-				if (x < minX)
-					minX = x;
-				if (x > maxX)
-					maxX = x;
-				if (y < minY)
-					minY = y;
-				if (y > maxY)
-					maxY = y;
-				xdata.get(i).add(x);
-				ydata.get(i).add(y);
-			}
-		}
-		if (_ratio) {
-			minY = (float) Math.max(0.2, minY);
-			maxY = (float) Math.min(5.0, maxY);
-		}
-
 		// Create the bitmap and draw the plot
 		bitmap = new BufferedImage(SIZE_X, SIZE_Y, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2 = (Graphics2D) bitmap.getGraphics();
@@ -298,8 +283,72 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		repaint();
 	}
 
+	public void autosize() {
+		float minbound = _centerX - (MAX_X - MIN_X) / _zoom;
+		float maxbound = _centerX + (MAX_X - MIN_X) / _zoom;
+
+		xdata = new ArrayList<ArrayList<Float>>();
+		ydata = new ArrayList<ArrayList<Float>>();
+		minX = null;
+		maxX = null;
+		minY = null;
+		maxY = null;
+
+		for (int i = 0; i < _elements.length; i++) {
+			int len = _elements[i].getSpectrumDataX().length;
+			if (smoothdata)
+				len -= 2 * SMOOTH_RADIUS;
+			xdata.add(new ArrayList<Float>());
+			ydata.add(new ArrayList<Float>());
+			for (int j = 0; j < len; j++) {
+				float x = 0, y = 0;
+				if (smoothdata) {
+					x = _elements[i].getSpectrumDataX()[j + SMOOTH_RADIUS];
+					if (x < minbound || x > maxbound)
+						continue;
+					for (int l = 0; l <= SMOOTH_RADIUS * 2; l++) {
+						y += _elements[i].getSpectrumDataY()[j + l] / (2 * SMOOTH_RADIUS + 1);
+					}
+				} else {
+					x = _elements[i].getSpectrumDataX()[j];
+					if (x < minbound || x > maxbound)
+						continue;
+					y = _elements[i].getSpectrumDataY()[j];
+				}
+				// find the min and max for the current window
+				if (minX == null)
+					minX = x;
+				if (maxX == null)
+					maxX = x;
+				if (minY == null)
+					minY = y;
+				if (maxY == null)
+					maxY = y;
+				if (x < minX)
+					minX = x;
+				if (x > maxX)
+					maxX = x;
+				if (y < minY)
+					minY = y;
+				if (y > maxY)
+					maxY = y;
+				xdata.get(i).add(x);
+				ydata.get(i).add(y);
+			}
+		}
+		if (_ratio && capdata) {
+			minY = (float) Math.max(0.2, minY);
+			maxY = (float) Math.min(5.0, maxY);
+		}
+		redraw();
+	}
+
 	public void setSmoothed(boolean selected) {
 		smoothdata = selected;
+	}
+
+	public void setCapped(boolean selected) {
+		capdata = selected;
 	}
 
 	@Override
@@ -330,18 +379,18 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	 */
 	@Override
 	public void mouseClicked(MouseEvent me) {
-		center = (me.getX() - _leftMargin) / ((float) SIZE_X - _leftMargin - _rightMargin) * (maxX - minX) + minX;
+		_centerX = (me.getX() - _leftMargin) / ((float) SIZE_X - _leftMargin - _rightMargin) * (maxX - minX) + minX;
 		switch (me.getButton()) {
 		case MouseEvent.BUTTON1:
-			zoom *= 2;
+			_zoom *= 2;
 			break;
 		case MouseEvent.BUTTON3:
-			if (zoom > 2)
-				zoom /= 2;
+			if (_zoom > 2)
+				_zoom /= 2;
 			break;
 		}
-		center = Math.max((MAX_X - MIN_X) / zoom + MIN_X, Math.min(MAX_X - (MAX_X - MIN_X) / zoom, center));
-		_parent.updateWindow(center, zoom);
+		_centerX = Math.max((MAX_X - MIN_X) / _zoom + MIN_X, Math.min(MAX_X - (MAX_X - MIN_X) / _zoom, _centerX));
+		_parent.updateWindow(_centerX, _centerY, _zoom);
 	}
 
 	@Override
@@ -354,14 +403,27 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 
 	@Override
 	public void mousePressed(MouseEvent me) {
+		prevX = me.getX();
+//		prevY = me.getY();
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent me) {
+		prevX = null;
+//		prevY = null;
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent me) {
+		int x = me.getX();
+//		int y = me.getY();
+		float dragX = (prevX - x)*(maxX - minX) / SIZE_X;
+//		float dragY = (prevY - y)*(maxY - minY) / SIZE_Y;
+		_centerX += dragX;
+		_centerX = Math.max((MAX_X - MIN_X) / _zoom + MIN_X, Math.min(MAX_X - (MAX_X - MIN_X) / _zoom, _centerX));
+		_parent.updateWindow(_centerX,_centerY,_zoom);
+		prevX = x;
+//		prevY = y;
 	}
 
 	@Override
@@ -370,9 +432,10 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		_parent.updateTrace(currenttrace);
 	}
 
-	public void updateWindow(float newcenter, float newzoom) {
-		center = newcenter;
-		zoom = newzoom;
+	public void updateWindow(float newcenterX, float newcenterY, float newzoom) {
+		_centerX = newcenterX;
+		_centerY = newcenterY;
+		_zoom = newzoom;
 	}
 
 	public void updateTrace(float newcurrenttrace) {
