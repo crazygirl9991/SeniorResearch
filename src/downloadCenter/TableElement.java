@@ -198,21 +198,33 @@ public class TableElement implements Comparable<TableElement> {
 	 * 
 	 * TODO refine this algorithm for matching accuracy
 	 */
-	public Boolean isMatch(TableElement that) throws UnsupportedOperationException {
+	public Boolean isMatch(TableElement that) {
 		// Radius = 1 (unit circle), RA [[hours]], Dec [[degrees]] are spherical
 		double[] tmp0 = {1.0, this.getCoords()[0], this.getCoords()[1]};
 		double[] tmp1 = {1.0, that.getCoords()[0], that.getCoords()[1]};
 		
-		try {
-			double angularDistance = Math.acos( Utility.dot( Utility.toCartesian(tmp0), Utility.toCartesian(tmp1) ) );
+		double r1 = tmp0[1] * Math.cos( Utility.degreesToRadians(tmp0[2]) );
+		double r2 = tmp1[1] * Math.cos( Utility.degreesToRadians(tmp1[2]) );
+		double d1 = tmp0[2];
+		double d2 = tmp1[2];
 		
-			if( angularDistance <= Utility.degreesToRadians(TableManager.DISTANCE_THRESHOLD) )
-				return true;
-			else
-				return false;
-		} catch (Exception e) {
-			throw ( new UnsupportedOperationException("ERROR: match calculation failed!", e) );
-		}
+		double angularDistance = Math.sqrt( (r1-r2)*(r1-r2) + (d1-d2)*(d1-d2) )*3600; // in arcsecs
+		
+		if( angularDistance <= TableManager.DISTANCE_THRESHOLD)
+			return true;
+		else
+			return false;
+		
+//		try {
+//			double angularDistance = Math.acos( Utility.dot( Utility.toCartesian(tmp0), Utility.toCartesian(tmp1) ) );
+//		
+//			if( angularDistance <= Utility.degreesToRadians(TableManager.DISTANCE_THRESHOLD) )
+//				return true;
+//			else
+//				return false;
+//		} catch (Exception e) {
+//			throw ( new UnsupportedOperationException("ERROR: match calculation failed!", e) );
+//		}
 	}
 	
 	/**

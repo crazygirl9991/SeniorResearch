@@ -1,14 +1,10 @@
 package downloadCenter;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Scanner;
 
 /**
  * Stores table administrative information (e.g. name, table format, etc.) and
@@ -25,7 +21,7 @@ public class TableManager {
 	public static String COLUMN_DELIMITER = "\t";
 	public static String LIST_DELIMITER = ",";
 
-	public static Double DISTANCE_THRESHOLD = 2.0 / 3600; // 2 arcsecs in degrees
+	public static Double DISTANCE_THRESHOLD = 2.0;/// 3600; // 2 arcsecs in degrees
 
 	@SuppressWarnings("unused")
 	private static Double FIBER_DISTANCE_THRESHOLD = 55.0; // arcsecs - physical limitation of drilling fibers on a plate
@@ -95,60 +91,11 @@ public class TableManager {
 	 * TODO
 	 * 
 	 * @return
-	 * @throws Exception
-	 */
-	static ArrayList<TableElement> importTable() throws Exception {
-		ArrayList<TableElement> table = new ArrayList<TableElement>();
-		Scanner scanner;
-
-		try {
-			scanner = new Scanner(new FileReader(TABLE_NAME));
-
-			while (scanner.hasNextLine()) {
-				String nextLine = scanner.nextLine();
-				if (!nextLine.startsWith("#") && !nextLine.equals("")) {
-					TableElement that = TableElement.parse(nextLine);
-					table.add(that);
-				}
-			}
-
-			scanner.close();
-		} catch (FileNotFoundException f) {
-			throw f;
-		}
-
-		return table;
-	}
-
-	/**
-	 * TODO
-	 * 
-	 * @param filename
-	 * @param data
-	 */
-	private static void writeTable(ArrayList<TableElement> table) throws Exception {
-		try {
-			BufferedWriter writer = new BufferedWriter(new FileWriter(TABLE_NAME));
-
-			writer.write(FILE_HEADER);
-			for (TableElement current : table)
-				writer.write(current.toString() + "\n");
-
-			writer.close();
-		} catch (Exception e) {
-			throw (new UnsupportedOperationException("ERROR: Could not write updated data to table: " + TABLE_NAME, e));
-		}
-	}
-
-	/**
-	 * TODO
-	 * 
-	 * @return
 	 */
 	public static String[] getDisplay() {
 		String[] tableArray;
 		try {
-			ArrayList<TableElement> table = importTable();
+			ArrayList<TableElement> table = CommandExecutor.importFile( TABLE_NAME, new TableElement() );
 			tableArray = new String[table.size()];
 			for (int i = 0; i < table.size(); i++)
 				tableArray[i] = table.get(i).toString();
@@ -207,7 +154,7 @@ public class TableManager {
 		try {
 			File pwd = new File(WorkingDirectory.DOWNLOADS.toString());
 			for (File current : pwd.listFiles()) {
-				TableElement temp = FitFileStore.ParseFitFile(current);
+				TableElement temp = FitFileStore.ParseFitFile(current, false);
 				if(temp != null)
 					table.add( temp );
 			}
@@ -224,7 +171,7 @@ public class TableManager {
 					}
 				}
 			}
-			writeTable(table);
+			CommandExecutor.write(TABLE_NAME, FILE_HEADER, table);
 			CommandExecutor.remove(backup);
 		} catch (Exception e) {
 			restore(backup);

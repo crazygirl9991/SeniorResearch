@@ -128,21 +128,32 @@ public class CommandExecutor {
 	/**
 	 * TODO document
 	 */
-	public static ArrayList<String> importFile(String filename) {
-		ArrayList<String> strings = new ArrayList<String>();
+	@SuppressWarnings("unchecked")
+	public static <T> ArrayList<T> importFile(String filename, T type) throws FileNotFoundException {
+		ArrayList<T> lines = new ArrayList<T>();
 
 		try {
 			Scanner scanner = new Scanner(new FileReader(filename));
 
-			while (scanner.hasNextLine())
-				strings.add(scanner.nextLine());
+			while (scanner.hasNextLine()) {
+				String nextLine = scanner.nextLine();
+				
+				if( type.getClass().equals(TableElement.class) ) {
+					if (!nextLine.startsWith("#") && !nextLine.equals("")) {
+						TableElement that = TableElement.parse(nextLine);
+						lines.add( (T) that);
+					}
+				} else
+					lines.add( (T) nextLine );
+			}
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
 			ErrorLogger.update("ERROR: Can't import file: " + filename, e);
+			throw e;
 		}
 
-		return strings;
+		return lines;
 	}
 
 	/**
@@ -150,12 +161,15 @@ public class CommandExecutor {
 	 * 
 	 * @param filename
 	 */
-	public static void write(String filename, ArrayList<String> lines) {
+	public static <T> void write(String filename, String header, ArrayList<T> lines) {
 		try {
 			BufferedWriter writer = new BufferedWriter( new FileWriter(filename) );
 			
-			for(String current : lines) {
-				writer.write(current);
+			if( !header.equals("") )
+				writer.write(header);
+				
+			for(T current : lines) {
+				writer.write( current.toString() );
 				writer.newLine();
 			}
 			

@@ -220,14 +220,19 @@ public class PlottingInterface implements ActionListener, ChangeListener {
 		
 			// check second half of list for a match
 			for(int i = startIndex+1; i < _data.size(); i++)
-				if( _data.get(i).hasMatch() )
-					endIndex = i;
+				if( _data.get(i).hasMatch() ) {
+					if( !_data.get(i).getMatches().contains(startIndex) ) {
+						// Only want those which weren't previously seen
+						endIndex = _data.get(i).getUniqueID();
+						i = _data.size(); //break condition
+					}
+				}
 		
 			// if none was found, then search the first half for a match
 			if(endIndex < 0) {
 				for(int i = 0; i < startIndex; i++)
 					if( _data.get(i).hasMatch() )
-						endIndex = i;
+						endIndex = _data.get(i).getUniqueID();
 			}
 		}
 		

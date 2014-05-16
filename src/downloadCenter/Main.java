@@ -59,11 +59,11 @@ public class Main implements ActionListener, DocumentListener {
 			for ( TextField curr : TextField.values() )
 				curr.getTextField().getDocument().addDocumentListener( this );
 
-			try {
-				_model = new TableElementModel( TableManager.importTable() );
+			try {//TODO why import table here? 
+				_model = new TableElementModel( CommandExecutor.importFile( TableManager.TABLE_NAME, new TableElement() ) );
 			} catch ( Exception e ) {
 				TableManager.updateTable();
-				_model = new TableElementModel( TableManager.importTable() );
+				_model = new TableElementModel( CommandExecutor.importFile( TableManager.TABLE_NAME, new TableElement() ) );
 			}
 			_list0 = new JTable( _model );
 			JScrollPane scroll = new JScrollPane( _list0 );
@@ -111,56 +111,60 @@ public class Main implements ActionListener, DocumentListener {
 				ArrayList<Integer> matchIndexList = element.getMatches();
 				matchIndexList.add( element.getUniqueID() );
 
-				JPanel boxLayout = new JPanel(), panel0 = new JPanel(), panel1 = new JPanel();
-				boxLayout.setLayout( new BoxLayout( boxLayout, BoxLayout.PAGE_AXIS ) );
-				panel0.setLayout( new BoxLayout( panel0, BoxLayout.PAGE_AXIS ) );
-				panel1.setLayout( new BoxLayout( panel1, BoxLayout.PAGE_AXIS ) );
-
-				boxLayout.add( new Label( "Please select at least 1 spectrum to plot. "
-						+ "The ratio between any 2 spectra will be calculated only if exactly 2 are selected.", Main.FONT ) );
-
-				boxLayout.add( new Label( "Spectra: ", Main.FONT_BOLD ) );
-				boxLayout.add( new Label( "   " + element.toString().replace( TableManager.COLUMN_DELIMITER, "  |  " ), Main.FONT ) );
-
-				panel0.add( new Label( "SDSS I & II", Main.FONT_BOLD ) );
-				panel1.add( new Label( "SDSS III", Main.FONT_BOLD ) );
+//				JPanel boxLayout = new JPanel(), panel0 = new JPanel(), panel1 = new JPanel();
+//				boxLayout.setLayout( new BoxLayout( boxLayout, BoxLayout.PAGE_AXIS ) );
+//				panel0.setLayout( new BoxLayout( panel0, BoxLayout.PAGE_AXIS ) );
+//				panel1.setLayout( new BoxLayout( panel1, BoxLayout.PAGE_AXIS ) );
+//
+//				boxLayout.add( new Label( "Please select at least 1 spectrum to plot. "
+//						+ "The ratio between any 2 spectra will be calculated only if exactly 2 are selected.", Main.FONT ) );
+//
+//				boxLayout.add( new Label( "Spectra: ", Main.FONT_BOLD ) );
+//				boxLayout.add( new Label( "   " + element.toString().replace( TableManager.COLUMN_DELIMITER, "  |  " ), Main.FONT ) );
+//
+//				panel0.add( new Label( "SDSS I & II", Main.FONT_BOLD ) );
+//				panel1.add( new Label( "SDSS III", Main.FONT_BOLD ) );
 
 				for ( int index : matchIndexList ) {
-					Boolean initialSelect = ( index == element.getUniqueID() );
+					//Boolean initialSelect = ( index == element.getUniqueID() );
 					TableElement temp = data.get( index );
 
-					if ( temp.getPlateInfo()[0] < FitFileStore.DATA_RELEASE )
-						panel0.add( new JCheckBox( temp.getFilename(), initialSelect ) );
-					else
-						panel1.add( new JCheckBox( temp.getFilename(), initialSelect ) );
+//					if ( temp.getPlateInfo()[0] < FitFileStore.DATA_RELEASE )
+//						panel0.add( new JCheckBox( temp.getFilename(), initialSelect ) );
+//					else
+//						panel1.add( new JCheckBox( temp.getFilename(), initialSelect ) );
+					
+					plotTheseFiles.add( temp.getFilename() );
 				}
 
-				boxLayout.add( panel0 );
-				boxLayout.add( panel1 );
-
-				Object[] buttonOptions = { "Plot", "Cancel" };
-				int n = JOptionPane.showOptionDialog( frame, boxLayout, windowTitle, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, //do not use a custom Icon 
-						buttonOptions, // use this array to title the buttons
-						buttonOptions[1] ); // and set the default button
-
-				if ( n == 0 ) {
-					for ( int i = 1; i < panel0.getComponentCount(); i++ ) {
-						JCheckBox current = (JCheckBox) panel0.getComponent( i );
-						if ( current.isSelected() )
-							plotTheseFiles.add( current.getText() );
-					}
-
-					for ( int i = 1; i < panel1.getComponentCount(); i++ ) {
-						JCheckBox current = (JCheckBox) panel1.getComponent( i );
-						if ( current.isSelected() )
-							plotTheseFiles.add( current.getText() );
-					}
-				}
+//				boxLayout.add( panel0 );
+//				boxLayout.add( panel1 );
+//
+//				Object[] buttonOptions = { "Plot", "Cancel" };
+//				int n = JOptionPane.showOptionDialog( frame, boxLayout, windowTitle, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, //do not use a custom Icon 
+//						buttonOptions, // use this array to title the buttons
+//						buttonOptions[1] ); // and set the default button
+//
+//				if ( n == 0 ) {
+//					for ( int i = 1; i < panel0.getComponentCount(); i++ ) {
+//						JCheckBox current = (JCheckBox) panel0.getComponent( i );
+//						if ( current.isSelected() )
+//							plotTheseFiles.add( current.getText() );
+//					}
+//
+//					for ( int i = 1; i < panel1.getComponentCount(); i++ ) {
+//						JCheckBox current = (JCheckBox) panel1.getComponent( i );
+//						if ( current.isSelected() )
+//							plotTheseFiles.add( current.getText() );
+//					}
+//				}
 			}
 
-			if ( plotTheseFiles.size() > 0 )
-				plotUI.display( plotTheseFiles );
-			else
+		if ( plotTheseFiles.size() > 0 ) {
+//			_frame.setVisible(false);
+//			_frame.dispose();
+			plotUI.display( plotTheseFiles );
+		} else
 				ErrorLogger.DIALOGUE( _frame, "Please select at least one spectrum to plot." );
 		} catch ( Exception e ) {
 			e.printStackTrace();
@@ -230,7 +234,6 @@ public class Main implements ActionListener, DocumentListener {
 			String invalidPlateInfo = retrieveValidPlateInfo( element );
 			final int[] plateInfo = element.getPlateInfo();
 			try {
-				//TableManager.updateTable();
 				if ( invalidPlateInfo.equals( "none" ) ) {
 					new SwingWorker<Void, Integer>() {
 						@Override
@@ -238,7 +241,7 @@ public class Main implements ActionListener, DocumentListener {
 							FitFileStore store = new FitFileStore( plateInfo );
 							store.Download();
 							TableManager.updateTable();
-							_model.setData( TableManager.importTable() );
+							_model.setData( CommandExecutor.importFile( TableManager.TABLE_NAME, new TableElement() ) );
 							return null;
 						}
 

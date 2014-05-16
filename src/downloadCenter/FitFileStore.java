@@ -25,7 +25,11 @@ public class FitFileStore {
 	}
 
 	public FitFileStore(String inputFileName) {
-		_downloadUrls = CommandExecutor.importFile( inputFileName );
+		try {
+			_downloadUrls = CommandExecutor.importFile( inputFileName, "" );
+		} catch(Exception e) {
+			//TODO
+		}
 	}
 
 	public FitFileStore(int MJD, int plate, int fiber) {
@@ -65,7 +69,7 @@ public class FitFileStore {
 	 * @throws IOException
 	 */
 	public static TableElement ParseFitFile(String url) throws IOException {
-		return ParseFitFile( new File( url ) );
+		return ParseFitFile( new File( url ), true );
 	}
 
 	/**
@@ -76,9 +80,7 @@ public class FitFileStore {
 	 * @return
 	 * @throws IOException
 	 */
-	public static TableElement ParseFitFile(File uneditedFileURL) throws IOException {
-		Boolean needSpectrum = true; //TODO this isn't supposed to be hard-coded
-
+	public static TableElement ParseFitFile(File uneditedFileURL, Boolean needSpectrum) throws IOException {
 		// remove the URL to get just the filename //
 		String spectrumFileName = uneditedFileURL.getName();
 
@@ -98,7 +100,7 @@ public class FitFileStore {
 			plateInfo[0] = header.getIntValue( "MJD" );
 			plateInfo[1] = header.getIntValue( "PLATEID" );
 			plateInfo[2] = header.getIntValue( "FIBERID" );
-			if ( plateInfo[0] < 55000 ) {
+			if ( plateInfo[0] <= DATA_RELEASE ) {
 				coords[0] = header.getDoubleValue( "RAOBJ" );
 				coords[1] = header.getDoubleValue( "DECOBJ" );
 			} else {
@@ -119,7 +121,7 @@ public class FitFileStore {
 				float[] dataX, dataY;
 
 				// read in the flux data
-				if ( plateInfo[0] < 55000 ) {
+				if ( plateInfo[0] <= DATA_RELEASE ) {
 					BasicHDU spectralDataHeader = fitFileImport.getHDU( 0 );
 					dataY = ( (float[][]) spectralDataHeader.getData().getData() )[0];
 				} else {
@@ -167,16 +169,28 @@ public class FitFileStore {
 		 */
 		// fiber needs to have padded 0s if less than 100 //
 		//TODO there are too different ways to pad this omg please reorganize
+		
+		String str = "";
 		String fiberStr = "";
-		if ( fiber < 10 )
-			fiberStr = "000";
-		else if ( fiber < 100 )
-			fiberStr = "00";
-		else if ( fiber < 1000 )
-			fiberStr = "0";
+		if( MJD <= DATA_RELEASE ) {
+			if ( fiber < 10 )
+				fiberStr = "00";
+			else if ( fiber < 100 )
+				fiberStr = "0";
+			
+			str = "http://das.sdss.org/spectro/1d_26/" + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit"; 
+		} else {
+			if ( fiber < 10 )
+				fiberStr = "000";
+			else if ( fiber < 100 )
+				fiberStr = "00";
+			else if ( fiber < 1000 )
+				fiberStr = "0";
+			
+			str = "http://data.sdss3.org/sas/dr10/boss/spectro/redux/v5_5_12/spectra/" + plate + "/spec-" + plate + "-" + MJD + "-" + fiberStr + fiber + ".fits";
+		}
 
-		//return "http://das.sdss.org/spectro/1d_26/" + plate + "/1d/spSpec-" + MJD + "-" + plate + "-" + fiberStr + fiber + ".fit";
-		return "http://data.sdss3.org/sas/dr10/boss/spectro/redux/v5_5_12/spectra/" + plate + "/spec-" + plate + "-" + MJD + "-" + fiberStr + fiber + ".fits";
+		return str;
 	}
 
 	/**

@@ -58,7 +58,7 @@ public class ErrorLogger {
 		for(Exception e : _errors)
 			strArray.add( e.getMessage() );
 		
-		CommandExecutor.write(_directory+LOG, strArray);
+		CommandExecutor.write(_directory+LOG, "", strArray);
 	}
 
 }
