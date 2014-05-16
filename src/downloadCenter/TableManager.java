@@ -1,10 +1,12 @@
 package downloadCenter;
 
-import java.io.File;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Scanner;
 
 /**
  * Stores table administrative information (e.g. name, table format, etc.) and
@@ -21,7 +23,7 @@ public class TableManager {
 	public static String COLUMN_DELIMITER = "\t";
 	public static String LIST_DELIMITER = ",";
 
-	public static Double DISTANCE_THRESHOLD = 2.0;/// 3600; // 2 arcsecs in degrees
+	public static Double DISTANCE_THRESHOLD = 2.0 / 3600; // 2 arcsecs in degrees
 
 	@SuppressWarnings("unused")
 	private static Double FIBER_DISTANCE_THRESHOLD = 55.0; // arcsecs - physical limitation of drilling fibers on a plate
@@ -33,7 +35,7 @@ public class TableManager {
 	 * @return
 	 * @throws IOException
 	 */
-	private static String makeBackup() throws IOException {
+	public static String makeBackup() throws IOException {
 		String backupFileName = renameForBackup(TABLE_NAME);
 
 		try {
@@ -78,7 +80,7 @@ public class TableManager {
 	 * @param ce
 	 * @throws IOException
 	 */
-	private static void restore(String filename) throws IOException {
+	public static void restore(String filename) throws IOException {
 		try {
 			CommandExecutor.copy(filename, TABLE_NAME);
 			CommandExecutor.remove(filename);
@@ -91,11 +93,60 @@ public class TableManager {
 	 * TODO
 	 * 
 	 * @return
+	 * @throws Exception
+	 */
+	static ArrayList<TableElement> importTable() throws Exception {
+		ArrayList<TableElement> table = new ArrayList<TableElement>();
+		Scanner scanner;
+
+		try {
+			scanner = new Scanner(new FileReader(TABLE_NAME));
+
+			while (scanner.hasNextLine()) {
+				String nextLine = scanner.nextLine();
+				if (!nextLine.startsWith("#") && !nextLine.equals("")) {
+					TableElement that = TableElement.parse(nextLine);
+					table.add(that);
+				}
+			}
+
+			scanner.close();
+		} catch (FileNotFoundException f) {
+			throw f;
+		}
+
+		return table;
+	}
+
+	/**
+	 * TODO
+	 * 
+	 * @param filename
+	 * @param data
+	 */
+	public static void writeTable(ArrayList<TableElement> table) throws Exception {
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(TABLE_NAME));
+
+			writer.write(FILE_HEADER);
+			for (TableElement current : table)
+				writer.write(current.toString() + "\n");
+
+			writer.close();
+		} catch (Exception e) {
+			throw (new UnsupportedOperationException("ERROR: Could not write updated data to table: " + TABLE_NAME, e));
+		}
+	}
+
+	/**
+	 * TODO
+	 * 
+	 * @return
 	 */
 	public static String[] getDisplay() {
 		String[] tableArray;
 		try {
-			ArrayList<TableElement> table = CommandExecutor.importFile( TABLE_NAME, new TableElement() );
+			ArrayList<TableElement> table = importTable();
 			tableArray = new String[table.size()];
 			for (int i = 0; i < table.size(); i++)
 				tableArray[i] = table.get(i).toString();
@@ -143,39 +194,4 @@ public class TableManager {
 //			throw (new IOException("ERROR: Table IOS failed.", e));
 //		}
 //	}
-
-	/**
-	 * TODO
-	 * @throws IOException
-	 */
-	public static void updateTable() throws IOException {
-		String backup = makeBackup();
-		ArrayList<TableElement> table = new ArrayList<TableElement>();
-		try {
-			File pwd = new File(WorkingDirectory.DOWNLOADS.toString());
-			for (File current : pwd.listFiles()) {
-				TableElement temp = FitFileStore.ParseFitFile(current, false);
-				if(temp != null)
-					table.add( temp );
-			}
-			Collections.sort(table);
-			for(int i = 0; i < table.size(); i++)
-				table.get(i).setUniqueID(i);
-			for(int i = 0; i < table.size(); i++) {
-				TableElement tei = table.get(i);
-				for(int j = i + 1; j < table.size(); j++) {
-					TableElement tej = table.get(j);
-					if( tei.isMatch(tej) ) {
-						tei.addMatch(tej);
-						tej.addMatch(tei);
-					}
-				}
-			}
-			CommandExecutor.write(TABLE_NAME, FILE_HEADER, table);
-			CommandExecutor.remove(backup);
-		} catch (Exception e) {
-			restore(backup);
-			throw (new IOException("ERROR: Table IOS failed.", e));
-		}
-	}
 }

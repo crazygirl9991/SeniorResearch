@@ -193,9 +193,8 @@ public class TestTableElement {
 		
 		String tableDisplay = te0.toString();
 		
-		TableElement te1 = new TableElement();
-		te1.parse(tableDisplay);
-		
+		TableElement te1 = TableElement.parse(tableDisplay);
+				
 		if( te0.isMatch(te1) )
 			assert(true);
 		
