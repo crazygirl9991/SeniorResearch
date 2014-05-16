@@ -37,7 +37,7 @@ public class BackgroundDownload {
 			setStatus(STATUS.DOWNLOADING);
 			store.Download();
 			updateTable();
-			Main.setData(TableManager.importTable());
+			Main.setData( CommandExecutor.importFile( TableManager.TABLE_NAME, new TableElement() ) );
 			setStatus(STATUS.IDLE);
 			return null;
 		}
@@ -107,7 +107,7 @@ public class BackgroundDownload {
 			}
 			setFile("");
 			setStatus(STATUS.WRITING);
-			TableManager.writeTable(table);
+			CommandExecutor.write(TableManager.TABLE_NAME, TableManager.FILE_HEADER, table);
 			CommandExecutor.remove(backup);
 		} catch (Exception e) {
 			TableManager.restore(backup);

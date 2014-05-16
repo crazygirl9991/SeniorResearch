@@ -16,6 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 /**
@@ -52,12 +53,12 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 	 * 
 	 * @throws Exception
 	 */
-	public void display(ArrayList<String> files) throws Exception {
+	public void display(ArrayList<TableElement> files) throws Exception {
 		// Read in the data from each fit file
 
 		TableElement[] elements = new TableElement[files.size()];
 		for (int i = 0; i < files.size(); i++) {
-			elements[i] = FitFileStore.ParseFitFile(files.get(i));
+			elements[i] = FitFileStore.getSpectrum(files.get(i));
 			elements[i].setColor(Color.getHSBColor((float) (i + 1) / (elements.length + 1), 1, (float) 0.7));
 		}
 
@@ -150,6 +151,74 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 
 		return ratio;
 	}
+	
+	//TODO add this
+	private void plotOptionsMenu(JFrame frame, TableElement element, ArrayList<TableElement> data) {
+		String windowTitle = "Plot Options";
+
+		try {
+			ArrayList<String> plotTheseFiles = new ArrayList<String>();
+
+			if (!element.hasMatch()) {
+				plotTheseFiles.add( element.getFilename() );
+			} else {
+				ArrayList<Integer> plottableFiles = element.getMatches();
+				plottableFiles.add( element.getUniqueID() );
+			
+				JPanel boxLayout = new JPanel(), panel0 = new JPanel(), panel1 = new JPanel();
+				boxLayout.setLayout(new BoxLayout(boxLayout, BoxLayout.PAGE_AXIS));
+				panel0.setLayout(new BoxLayout(panel0, BoxLayout.PAGE_AXIS));
+				panel1.setLayout(new BoxLayout(panel1, BoxLayout.PAGE_AXIS));
+
+				boxLayout.add(new Label("Please select at least 1 spectrum to plot. "
+						+ "The ratio between any 2 spectra will be calculated only if exactly 2 are selected.", Main.FONT));
+
+				// Sets the label names
+				panel0.add(new Label("SDSS I & II", Main.FONT_BOLD));
+				panel1.add(new Label("SDSS III", Main.FONT_BOLD));
+			
+				// Sorts the checkboxes based on Data release and adds them to the proper panel TODO no. just no. not maintainable.
+				for (int index : plottableFiles) {
+					Boolean initialSelect = (index == element.getUniqueID());
+					TableElement temp = data.get(index);
+
+					if (temp.getPlateInfo()[0] < FitFileStore.DATA_RELEASE)
+						panel0.add( new Label("   " + temp.toString().replace(TableManager.COLUMN_DELIMITER, "  |  "), Main.FONT), initialSelect );
+					else
+						panel1.add( new Label("   " + temp.toString().replace(TableManager.COLUMN_DELIMITER, "  |  "), Main.FONT), initialSelect );
+				}
+
+				boxLayout.add(panel0);
+				boxLayout.add(panel1);
+
+				Object[] buttonOptions = { "Plot", "Cancel" };
+				int n = JOptionPane.showOptionDialog(frame, boxLayout, windowTitle, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, //do not use a custom Icon 
+						buttonOptions, // use this array to title the buttons
+						buttonOptions[1]); // and set the default button
+
+				if (n == 0) {
+					for (int i = 1; i < panel0.getComponentCount(); i++) {
+						JCheckBox current = (JCheckBox) panel0.getComponent(i);
+						if (current.isSelected())
+							plotTheseFiles.add(current.getText());
+					}
+
+					for (int i = 1; i < panel1.getComponentCount(); i++) {
+						JCheckBox current = (JCheckBox) panel1.getComponent(i);
+						if (current.isSelected())
+							plotTheseFiles.add(current.getText());
+					}
+				}
+			}
+
+			if (plotTheseFiles.size() > 0) {
+				//display(plotTheseFiles); TODO how can I pass a TableElement from here? 
+			} else
+				ErrorLogger.DIALOGUE(frame, "Please select at least one spectrum to plot.");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * TODO
@@ -218,7 +287,7 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 			if (endIndex < 0)
 				ErrorLogger.DIALOGUE(this, "No more matches found!");
 			else
-				Main.Plot_Options_Menu(this, _data.get(endIndex), _data);
+				Main.Plot(_data.get(endIndex) );
 
 			break;
 		case "Previous":
@@ -227,7 +296,7 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 			if (endIndex < 0)
 				ErrorLogger.DIALOGUE(this, "No more matches found!");
 			else
-				Main.Plot_Options_Menu(this, _data.get(endIndex), _data);
+				Main.Plot(_data.get(endIndex) );
 
 			break;
 		}

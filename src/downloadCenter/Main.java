@@ -14,7 +14,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -67,7 +66,7 @@ public class Main implements ActionListener, DocumentListener {
 				curr.getTextField().getDocument().addDocumentListener(this);
 
 			//			try {
-			_model = new TableElementModel(TableManager.importTable());
+			_model = new TableElementModel( CommandExecutor.importFile( TableManager.TABLE_NAME, new TableElement() ) );
 			//			} catch ( Exception e ) {
 			//				TableManager.updateTable();
 			//				_model = new TableElementModel( TableManager.importTable() );
@@ -111,83 +110,34 @@ public class Main implements ActionListener, DocumentListener {
 			e.printStackTrace();
 		}
 	}
-
-	public static void Plot_Options_Menu(JFrame frame, TableElement element, ArrayList<TableElement> data) {
-		String windowTitle = "Plot Options";
-
+	
+	public static void Plot(TableElement current) {
 		try {
+			//TODO I want auto-multi select to be enabled? or if multiple are selected plot all? Check if match? what do?
+			ArrayList<TableElement> plotTheseElements = new ArrayList<TableElement>();
+			ArrayList<Integer> matchIndices = current.getMatches();
+			plotTheseElements.add(current);
+			
+			for(int i : matchIndices)
+				plotTheseElements.add( _model.getData().get(i) );
+			
 			if (plotUI != null) {
 				float centerX = plotUI.getCenterX();
 				float centerY = plotUI.getCenterY();
 				float zoom = plotUI.getZoom();
 				plotUI.setVisible(false);
 				plotUI.dispose();
-				plotUI = new PlottingInterface(data, element, centerX, centerY, zoom);
+				plotUI = new PlottingInterface(_model.getData(), current, centerX, centerY, zoom);
 			} else
-				plotUI = new PlottingInterface(data, element);
-			ArrayList<String> plotTheseFiles = new ArrayList<String>();
-
-			if (!element.hasMatch()) {
-				plotTheseFiles.add(element.getFilename());
-			} else {
-				ArrayList<Integer> matchIndexList = element.getMatches();
-				matchIndexList.add(element.getUniqueID());
-
-				JPanel boxLayout = new JPanel(), panel0 = new JPanel(), panel1 = new JPanel();
-				boxLayout.setLayout(new BoxLayout(boxLayout, BoxLayout.PAGE_AXIS));
-				panel0.setLayout(new BoxLayout(panel0, BoxLayout.PAGE_AXIS));
-				panel1.setLayout(new BoxLayout(panel1, BoxLayout.PAGE_AXIS));
-
-				boxLayout.add(new Label("Please select at least 1 spectrum to plot. "
-						+ "The ratio between any 2 spectra will be calculated only if exactly 2 are selected.", Main.FONT));
-
-				boxLayout.add(new Label("Spectra: ", Main.FONT_BOLD));
-				boxLayout.add(new Label("   " + element.toString().replace(TableManager.COLUMN_DELIMITER, "  |  "), Main.FONT));
-
-				panel0.add(new Label("SDSS I & II", Main.FONT_BOLD));
-				panel1.add(new Label("SDSS III", Main.FONT_BOLD));
-
-				for (int index : matchIndexList) {
-					Boolean initialSelect = (index == element.getUniqueID());
-					TableElement temp = data.get(index);
-
-					if (temp.getPlateInfo()[0] < FitFileStore.DATA_RELEASE)
-						panel0.add(new JCheckBox(temp.getFilename(), initialSelect));
-					else
-						panel1.add(new JCheckBox(temp.getFilename(), initialSelect));
-				}
-
-				boxLayout.add(panel0);
-				boxLayout.add(panel1);
-
-				Object[] buttonOptions = { "Plot", "Cancel" };
-				int n = JOptionPane.showOptionDialog(frame, boxLayout, windowTitle, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, //do not use a custom Icon 
-						buttonOptions, // use this array to title the buttons
-						buttonOptions[1]); // and set the default button
-
-				if (n == 0) {
-					for (int i = 1; i < panel0.getComponentCount(); i++) {
-						JCheckBox current = (JCheckBox) panel0.getComponent(i);
-						if (current.isSelected())
-							plotTheseFiles.add(current.getText());
-					}
-
-					for (int i = 1; i < panel1.getComponentCount(); i++) {
-						JCheckBox current = (JCheckBox) panel1.getComponent(i);
-						if (current.isSelected())
-							plotTheseFiles.add(current.getText());
-					}
-				}
-			}
-
-			if (plotTheseFiles.size() > 0)
-				plotUI.display(plotTheseFiles);
-			else
-				ErrorLogger.DIALOGUE(_frame, "Please select at least one spectrum to plot.");
-		} catch (Exception e) {
-			e.printStackTrace();
+				plotUI = new PlottingInterface(_model.getData(), current);
+			
+			plotUI.display(plotTheseElements);
+		} catch(Exception e) {
+			e.printStackTrace();//TODO wut?
 		}
 	}
+
+	
 
 	public String retrieveValidCoords(TableElement element) {
 		String invalidEntries = "\n\n";
@@ -286,8 +236,8 @@ public class Main implements ActionListener, DocumentListener {
 
 			if (selected.length == 0) {
 				ErrorLogger.DIALOGUE(_frame, "Please select a spectrum.");
-			} else {
-				Plot_Options_Menu(_frame, element, _model.getData());
+			} else {			
+				Plot(element);
 			}
 			break;
 		case "toggle":

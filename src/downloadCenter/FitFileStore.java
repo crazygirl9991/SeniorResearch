@@ -68,8 +68,39 @@ public class FitFileStore {
 	 * @return
 	 * @throws IOException
 	 */
-	public static TableElement ParseFitFile(String url) throws IOException {
-		return ParseFitFile( new File( url ), true );
+	public static TableElement getSpectrum(TableElement element) throws IOException {
+		try {
+			Fits fitFileImport = new Fits( new File( WORKING_DIRECTORY.toString(), element.getFilename() ) );
+			Header header = fitFileImport.getHDU( 0 ).getHeader();
+		
+			// read these two coefficients from the header
+			double c0 = header.getDoubleValue( "COEFF0" );
+			double c1 = header.getDoubleValue( "COEFF1" );
+
+			float[] dataX, dataY;
+
+			// read in the flux data
+			if ( element.getPlateInfo()[0] <= DATA_RELEASE ) {
+				BasicHDU spectralDataHeader = fitFileImport.getHDU( 0 );
+				dataY = ( (float[][]) spectralDataHeader.getData().getData() )[0];
+			} else {
+				BasicHDU spectralDataHeader = fitFileImport.getHDU( 1 );
+				dataY = (float[]) ( (TableHDU) spectralDataHeader ).getColumn( 0 );
+			}
+			// generate the wavelength data
+			dataX = new float[dataY.length];
+			for ( int i = 0; i < dataX.length; i++ )
+				dataX[i] = (float) Math.pow( 10, ( c0 + c1 * i ) );
+
+			element.setSpectrumData( dataX, dataY );
+		
+			fitFileImport.getStream().close();
+		} catch (Exception e) {
+			ErrorLogger.update( "Could not load file: " + element.getFilename(), e );
+			element = null;
+		}
+		
+		return element;
 	}
 
 	/**
@@ -80,15 +111,15 @@ public class FitFileStore {
 	 * @return
 	 * @throws IOException
 	 */
-	public static TableElement ParseFitFile(File uneditedFileURL, Boolean needSpectrum) throws IOException {
+	public static TableElement ParseFitFile(File uneditedFileURL) throws IOException {
 		// remove the URL to get just the filename //
-		String spectrumFileName = uneditedFileURL.getName();
+		String filename = uneditedFileURL.getName();
 
 		// then read in the fits file and extract the plate and coordinate information from the header //
-		TableElement element = new TableElement( spectrumFileName );
+		TableElement element = new TableElement(filename);
 
 		try {
-			Fits fitFileImport = new Fits( new File( WORKING_DIRECTORY.toString(), spectrumFileName ) );
+			Fits fitFileImport = new Fits( new File( WORKING_DIRECTORY.toString(), filename ) );
 			Header header = fitFileImport.getHDU( 0 ).getHeader();
 
 			double[] coords = { 0, 0 };
@@ -100,6 +131,7 @@ public class FitFileStore {
 			plateInfo[0] = header.getIntValue( "MJD" );
 			plateInfo[1] = header.getIntValue( "PLATEID" );
 			plateInfo[2] = header.getIntValue( "FIBERID" );
+			
 			if ( plateInfo[0] <= DATA_RELEASE ) {
 				coords[0] = header.getDoubleValue( "RAOBJ" );
 				coords[1] = header.getDoubleValue( "DECOBJ" );
@@ -111,34 +143,10 @@ public class FitFileStore {
 			element.setCoords( coords );
 			element.setPlateInfo( plateInfo );
 
-			if ( needSpectrum ) {
-				
-
-				// read these two coefficients from the header
-				double c0 = header.getDoubleValue( "COEFF0" );
-				double c1 = header.getDoubleValue( "COEFF1" );
-
-				float[] dataX, dataY;
-
-				// read in the flux data
-				if ( plateInfo[0] <= DATA_RELEASE ) {
-					BasicHDU spectralDataHeader = fitFileImport.getHDU( 0 );
-					dataY = ( (float[][]) spectralDataHeader.getData().getData() )[0];
-				} else {
-					BasicHDU spectralDataHeader = fitFileImport.getHDU( 1 );
-					dataY = (float[]) ( (TableHDU) spectralDataHeader ).getColumn( 0 );
-				}
-				// generate the wavelength data
-				dataX = new float[dataY.length];
-				for ( int i = 0; i < dataX.length; i++ )
-					dataX[i] = (float) Math.pow( 10, ( c0 + c1 * i ) );
-
-				element.setSpectrumData( dataX, dataY );
-			}
 			fitFileImport.getStream().close();
 
 		} catch ( Exception e ) {
-			ErrorLogger.update( "Could not load file: " + spectrumFileName, e );
+			ErrorLogger.update( "Could not load file: " + filename, e );
 			element = null;
 		}
 
