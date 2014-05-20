@@ -72,8 +72,9 @@ public class BackgroundDownload {
 		pcs.removePropertyChangeListener(listener);
 	}
 	
-	/**
-	 * TODO
+	/**TODO this does NOT go here... or like why have two classes for this? and also backup and restore are not asychned!
+	 * Updates the table specified by TableManager by checking which
+	 * files are in the /downloads/ Folder
 	 * @throws IOException
 	 */
 	public void updateTable() throws IOException {

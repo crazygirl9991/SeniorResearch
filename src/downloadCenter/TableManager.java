@@ -110,35 +110,4 @@ public class TableManager {
 
 		return tableArray;
 	}
-
-//	/**
-//	 * Imports current table, locates matches, and assigns uniqueID to this
-//	 * table element. Then updates the table.
-//	 */
-//	public static void SaveToTable(TableElement element) throws Exception {
-//		String backup = makeBackup();
-//
-//		try {
-//			ArrayList<TableElement> table = importTable();
-//			//TODO implement improved match algorithm
-//			//TODO TODO prevent duplicate files from being written to the table!!
-//			element.setUniqueID(table.size());
-//
-//			for (TableElement that : table) {
-//				if (element.isMatch(that)) {
-//					element.addMatch(that);
-//					that.addMatch(element);
-//				}
-//			}
-//
-//			table.add(element);
-//
-//			writeTable(table);
-//		} catch (FileNotFoundException f) {
-//			CommandExecutor.createFile(TABLE_NAME);
-//		} catch (Exception e) {
-//			restore(backup);
-//			throw (new IOException("ERROR: Table IOS failed.", e));
-//		}
-//	}
 }

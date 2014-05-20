@@ -61,8 +61,8 @@ public class FitFileStore {
 	}
 
 	/**
-	 * Opens a fits file, retrieves information regarding plate, position, and
-	 * spectral data, and returns an TableElement initialized with this
+	 * Opens a fits file, retrieves information regarding spectral data,
+	 * appends it to the TableElement, and returns it.
 	 * information.
 	 * 
 	 * @return
@@ -104,8 +104,9 @@ public class FitFileStore {
 	}
 
 	/**
-	 * Opens a fits file, retrieves information regarding plate, position, and
-	 * spectral data, and returns an TableElement initialized with this
+	 * Opens a fits file, retrieves information regarding plate and position,
+	 * and returns a TableElement initialized with these details. There are 
+	 * different labels for RA and Dec between data releases.
 	 * information.
 	 * 
 	 * @return
