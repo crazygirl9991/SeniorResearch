@@ -125,9 +125,11 @@ public class Main implements ActionListener, DocumentListener {
 				float centerX = plotUI.getCenterX();
 				float centerY = plotUI.getCenterY();
 				float zoom = plotUI.getZoom();
+				boolean capped = plotUI.getCapped();
+				boolean smoothed = plotUI.getSmoothed();
 				plotUI.setVisible(false);
 				plotUI.dispose();
-				plotUI = new PlottingInterface(_model.getData(), current, centerX, centerY, zoom);
+				plotUI = new PlottingInterface(_model.getData(), current, centerX, centerY, zoom, capped, smoothed);
 			} else
 				plotUI = new PlottingInterface(_model.getData(), current);
 			

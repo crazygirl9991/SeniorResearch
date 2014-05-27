@@ -34,6 +34,8 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 	Float _centerX = null;
 	Float _centerY = null;
 	Float _zoom = null;
+	Boolean _capped = null;
+	Boolean _smoothed = null;
 
 	public PlottingInterface(ArrayList<TableElement> data, TableElement current) {
 		super("Plotting Interface");
@@ -41,11 +43,13 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 		_current = current;
 	}
 
-	public PlottingInterface(ArrayList<TableElement> data, TableElement current, float centerX, float centerY, float zoom) {
+	public PlottingInterface(ArrayList<TableElement> data, TableElement current, float centerX, float centerY, float zoom, boolean capped, boolean smoothed) {
 		this(data, current);
 		_centerX = centerX;
 		_centerY = centerY;
 		_zoom = zoom;
+		_capped = capped;
+		_smoothed = smoothed;
 	}
 
 	/**
@@ -70,8 +74,8 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		if (_centerX != null && _centerY != null && _zoom != null)
-			_plots.add(new SpectrumPlotter(elements, this, false, _centerX, _centerY, _zoom));
+		if (_centerX != null && _centerY != null && _zoom != null && _capped != null && _smoothed != null)
+			_plots.add(new SpectrumPlotter(elements, this, false, _centerX, _centerY, _zoom, _capped, _smoothed));
 		else
 			_plots.add(new SpectrumPlotter(elements, this, false));
 		panel.add(_plots.get(0));
@@ -79,8 +83,8 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 		if (elements.length == 2) {
 			TableElement ratio = calculateRatio(elements[0], elements[1]);
 			ratio.setColor(Color.red);
-			if (_centerX != null && _centerY != null && _zoom != null)
-				_plots.add(new SpectrumPlotter(new TableElement[] { ratio }, this, true, _centerX, _centerY, _zoom));
+			if (_centerX != null && _centerY != null && _zoom != null && _capped != null && _smoothed != null)
+				_plots.add(new SpectrumPlotter(new TableElement[] { ratio }, this, true, _centerX, _centerY, _zoom, _capped, _smoothed));
 			else
 				_plots.add(new SpectrumPlotter(new TableElement[] { ratio }, this, true));
 			panel.add(_plots.get(1));
@@ -92,10 +96,14 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 		JButton previous = new JButton("Previous");
 		previous.addActionListener(this);
 
-		JCheckBox smoothed = new JCheckBox("Smoothed");
+		if(_smoothed == null)
+			_smoothed = false;
+		JCheckBox smoothed = new JCheckBox("Smoothed",_smoothed);
 		smoothed.addItemListener(this);
 		
-		JCheckBox capped = new JCheckBox("Capped");
+		if(_capped == null)
+			_capped = false;
+		JCheckBox capped = new JCheckBox("Capped",_capped);
 		capped.addItemListener(this);
 
 		JButton next = new JButton("Next");
@@ -360,13 +368,15 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 		JCheckBox source = (JCheckBox) ce.getSource();
 		switch(source.getText())
 		{
-		case "Smoothed":			
+		case "Smoothed":
+			_smoothed = source.isSelected();
 			for (SpectrumPlotter curr : _plots)
-				curr.setSmoothed(source.isSelected());
+				curr.setSmoothed(_smoothed);
 			break;
 		case "Capped":
+			_capped = source.isSelected();
 			for (SpectrumPlotter curr : _plots)
-				curr.setCapped(source.isSelected());
+				curr.setCapped(_capped);
 			break;
 		}
 		autosizeAllPlots();
@@ -414,6 +424,14 @@ public class PlottingInterface extends JFrame implements ActionListener, ItemLis
 
 	public float getZoom() {
 		return _zoom;
+	}
+
+	public Boolean getCapped() {
+		return _capped;
+	}
+
+	public Boolean getSmoothed() {
+		return _smoothed;
 	}
 
 }
