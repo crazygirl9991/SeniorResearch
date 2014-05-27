@@ -83,6 +83,10 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 
 	private boolean _ratio;
 
+	private float mean;
+
+	private float stdev;
+
 	public SpectrumPlotter(TableElement[] elements, PlottingInterface parent, boolean ratio) throws Exception {
 		_elements = elements;
 		_parent = parent;
@@ -99,15 +103,24 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		// find the min and max of all of the data
 		float min_X = _elements[0].getSpectrumDataX()[0];
 		float max_X = min_X;
+		float count = 0;
+		float sum1 = 0;
+		float sum2 = 0;
 		for ( int i = 0; i < _elements.length; i++ ) {
 			for ( int j = 0; j < _elements[i].getSpectrumDataX().length; j++ ) {
 				float x = _elements[i].getSpectrumDataX()[j];
+				float y = _elements[i].getSpectrumDataY()[j];
 				if ( x < min_X )
 					min_X = x;
 				if ( x > max_X )
 					max_X = x;
+				count++;
+				sum1 += y;
+				sum2 += y * y;
 			}
 		}
+		mean = sum1 / count;
+		stdev = (float) ( Math.sqrt( count * sum2 - sum1 * sum1 ) / count );
 		MIN_X = min_X;
 		MAX_X = max_X;
 
@@ -322,10 +335,16 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 				ydata.get( i ).add( y );
 			}
 		}
-		if ( _ratio && _capdata ) {
-			minY = (float) Math.max( 0.2, minY );
-			maxY = (float) Math.min( 5.0, maxY );
+		if ( _capdata ) {
+			if ( _ratio ) {
+				minY = (float) Math.max( 0.2, minY );
+				maxY = (float) Math.min( 5.0, maxY );
+			} else {
+				minY = (float) Math.max( mean - 3 * stdev, minY );
+				maxY = (float) Math.min( mean + 3 * stdev, maxY );
+			}
 		}
+
 		redraw();
 	}
 
