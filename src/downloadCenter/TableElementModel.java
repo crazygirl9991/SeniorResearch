@@ -4,6 +4,14 @@ import java.util.ArrayList;
 
 import javax.swing.table.AbstractTableModel;
 
+/**
+ * This creates the display of downloaded files for the main menu,
+ * and keeps track of all of the files on the computer when the
+ * application is running.
+ * 
+ * @author victoria
+ *
+ */
 @SuppressWarnings("serial")
 public class TableElementModel extends AbstractTableModel {
 	final String[] colnames = new String[]{"ID","RA","Dec","MJD","Plate","Fiber","Matches"};
@@ -42,7 +50,7 @@ public class TableElementModel extends AbstractTableModel {
 		return _data.get( _filter.get(r) ).getFilename();
 	}
 	
-	public TableElement getRowUnfiltered(int r) {
+	public TableElement get(int r) {
 		return _data.get( r );
 	}
 	
@@ -58,6 +66,11 @@ public class TableElementModel extends AbstractTableModel {
 	@Override
 	public int getColumnCount() {
 		return colnames.length;
+	}
+	
+	public int size()
+	{
+		return _data.size();
 	}
 
 	@Override

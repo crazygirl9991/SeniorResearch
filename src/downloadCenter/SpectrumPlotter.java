@@ -24,6 +24,11 @@ import java.util.Collections;
 import javax.swing.JComponent;
 
 /**
+ * This is the spectrum window itself, which takes in the data
+ * for however many spectra and plots it (applying whatever plot
+ * options are passed in). The plotting interface has at most
+ * two of these objects (one for the comparison, and one for
+ * the ratio, if it is needed).
  * 
  * @author vtielebein, lmachen
  * 
@@ -31,7 +36,7 @@ import javax.swing.JComponent;
 @SuppressWarnings("serial")
 public class SpectrumPlotter extends JComponent implements ComponentListener, MouseListener, MouseMotionListener {
 
-	private TableElement[] _elements;
+	private ArrayList<TableElement> _elements;
 
 	private int SIZE_X = 800; // width of the plots in pixels
 	private int SIZE_Y = 300; // height of the plots in pixels
@@ -46,7 +51,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	private int _bottomMargin;
 
 	// how many pixels on either side to average together
-	private final int SMOOTH_RADIUS = 1;
+//	private int smoothRadius = 1;
 
 	// controls the spacing between the text
 	private final int GAP = 5;
@@ -62,24 +67,23 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	private Float maxX; // maximum x of view window
 	private Float minY; // minimum y of view window
 	private Float maxY; // maximum y of view window
-	private float _zoom;
-	private float _centerX;
-	private float _centerY;
+//	private float _zoom;
+//	private float _centerX;
 	private Integer prevX = null;
 	//	private Integer prevY = null;
 
 	private BufferedImage bitmap; // bitmap used for double buffering
 
-	private float currenttrace = 0;
+//	private float currenttrace = 0;
 
-	private boolean _smoothdata;
-	private boolean _capdata;
+//	private boolean _smoothdata;
+//	private boolean _capdata;
 
 	private ArrayList<ArrayList<Float>> xdata;
 
 	private ArrayList<ArrayList<Float>> ydata;
 
-	private PlottingInterface _parent;
+	private PlotUI _parent;
 
 	private boolean _ratio;
 
@@ -87,7 +91,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 
 	private float stdev;
 
-	public SpectrumPlotter(TableElement[] elements, PlottingInterface parent, boolean ratio) throws Exception {
+	public SpectrumPlotter(ArrayList<TableElement> elements, PlotUI parent, boolean ratio) {
 		_elements = elements;
 		_parent = parent;
 		_ratio = ratio;
@@ -101,15 +105,15 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		addMouseMotionListener( this );
 
 		// find the min and max of all of the data
-		float min_X = _elements[0].getSpectrumDataX()[0];
+		float min_X = _elements.get(0).getSpectrumDataX()[0];
 		float max_X = min_X;
 		float count = 0;
 		float sum1 = 0;
 		float sum2 = 0;
-		for ( int i = 0; i < _elements.length; i++ ) {
-			for ( int j = 0; j < _elements[i].getSpectrumDataX().length; j++ ) {
-				float x = _elements[i].getSpectrumDataX()[j];
-				float y = _elements[i].getSpectrumDataY()[j];
+		for ( int i = 0; i < _elements.size(); i++ ) {
+			for ( int j = 0; j < _elements.get(i).getSpectrumDataX().length; j++ ) {
+				float x = _elements.get(i).getSpectrumDataX()[j];
+				float y = _elements.get(i).getSpectrumDataY()[j];
 				if ( x < min_X )
 					min_X = x;
 				if ( x > max_X )
@@ -123,28 +127,21 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		stdev = (float) ( Math.sqrt( count * sum2 - sum1 * sum1 ) / count );
 		MIN_X = min_X;
 		MAX_X = max_X;
-
-		_zoom = 2;
-		_centerX = ( MAX_X + MIN_X ) / 2;
-		_centerY = 0;
-		_parent.updateWindow( _centerX, _centerY, _zoom );
-		_capdata = false;
-		_smoothdata = false;
+		_parent.getOptions().setCenterX((MAX_X+MIN_X)/2);
 		autosize();
 	}
 
-	public SpectrumPlotter(TableElement[] elements, PlottingInterface parent, boolean ratio, float centerX, float centerY, float zoom, boolean capped,
-			boolean smoothed) throws Exception {
-		this( elements, parent, ratio );
-
-		_zoom = zoom;
-		_centerX = centerX;
-		_centerY = centerY;
-		_capdata = capped;
-		_smoothdata = smoothed;
-
-		autosize();
-	}
+//	public SpectrumPlotter(ArrayList<TableElement> elements, PlottingInterface parent, boolean ratio, float centerX, float zoom, boolean capped,
+//			boolean smoothed) throws Exception {
+//		this( elements, parent, ratio );
+//
+//		_zoom = zoom;
+//		_centerX = centerX;
+//		_capdata = capped;
+//		_smoothdata = smoothed;
+//
+//		autosize();
+//	}
 
 	/**
 	 * Convert graph x coordinate into pixel value.
@@ -181,8 +178,8 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		int strheight = fontMetrics.getAscent() - fontMetrics.getDescent();
 
 		for ( int i = 0; i < xdata.size(); i++ ) {
-			g2.setColor( _elements[i].getColor() );
-			int index = Collections.binarySearch( xdata.get( i ), currenttrace );
+			g2.setColor( _elements.get(i).getColor() );
+			int index = Collections.binarySearch( xdata.get( i ), _parent.getOptions().getCurrentTrace());
 			if ( index < 0 )
 				index = -index - 1;
 			if ( index >= xdata.get( i ).size() )
@@ -207,7 +204,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		// draw the background white
 		g2.setColor( Color.white );
 		g2.fillRect( 0, 0, SIZE_X, SIZE_Y );
-		g2.setFont( Main.FONT );
+		g2.setFont( MainAndDownloadUI.FONT );
 		FontMetrics fontMetrics = g2.getFontMetrics();
 		int strheight = fontMetrics.getAscent() - fontMetrics.getDescent();
 		int maxWidth = 0;
@@ -222,8 +219,8 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		_bottomMargin = 2 * strheight + 4 * GAP;
 
 		// draw a line for each data point
-		for ( int i = 0; i < _elements.length; i++ ) {
-			g2.setColor( _elements[i].getColor() );
+		for ( int i = 0; i < _elements.size(); i++ ) {
+			g2.setColor( _elements.get(i).getColor() );
 			for ( int j = 0; j < xdata.get( i ).size() - 1; j++ ) {
 				g2.draw( new Line2D.Float( pixelX( xdata.get( i ).get( j ) ), pixelY( ydata.get( i ).get( j ) ), pixelX( xdata.get( i ).get( j + 1 ) ),
 						pixelY( ydata.get( i ).get( j + 1 ) ) ) );
@@ -252,7 +249,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 			g2.transform( AffineTransform.getRotateInstance( -Math.PI / 2, pixelX( minX ) - 3 * GAP - maxWidth - strheight / 2, pixelY( ( maxY + minY ) / 2 ) ) );
 			AttributedString yaxislabel = new AttributedString( "Flux (10-17 erg/(cm*s2*\u00C5))" );
 
-			yaxislabel.addAttribute( TextAttribute.FONT, Main.FONT );
+			yaxislabel.addAttribute( TextAttribute.FONT, MainAndDownloadUI.FONT );
 			yaxislabel.addAttribute( TextAttribute.SUPERSCRIPT, TextAttribute.SUPERSCRIPT_SUPER, 8, 11 );
 			yaxislabel.addAttribute( TextAttribute.SUPERSCRIPT, TextAttribute.SUPERSCRIPT_SUPER, 21, 22 );
 
@@ -279,8 +276,8 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	}
 
 	public void autosize() {
-		float minbound = _centerX - ( MAX_X - MIN_X ) / _zoom;
-		float maxbound = _centerX + ( MAX_X - MIN_X ) / _zoom;
+		float minbound = _parent.getOptions().getCenterX() - ( MAX_X - MIN_X ) / _parent.getOptions().getZoom();
+		float maxbound = _parent.getOptions().getCenterX() + ( MAX_X - MIN_X ) / _parent.getOptions().getZoom();
 
 		xdata = new ArrayList<ArrayList<Float>>();
 		ydata = new ArrayList<ArrayList<Float>>();
@@ -289,30 +286,31 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		minY = null;
 		maxY = null;
 
-		if ( _capdata ) {
+		if ( _parent.getOptions().isCapData() ) {
 			minY = 0.2f;
 			maxY = 5.0f;
 		}
-		for ( int i = 0; i < _elements.length; i++ ) {
-			int len = _elements[i].getSpectrumDataX().length;
-			if ( _smoothdata )
-				len -= 2 * SMOOTH_RADIUS;
+		for ( int i = 0; i < _elements.size(); i++ ) {
+			int len = _elements.get(i).getSpectrumDataX().length;
+			int smoothRadius = _parent.getOptions().getSmoothRadius();
+			if ( smoothRadius > 0)
+				len -= 2 * smoothRadius;
 			xdata.add( new ArrayList<Float>() );
 			ydata.add( new ArrayList<Float>() );
 			for ( int j = 0; j < len; j++ ) {
 				float x = 0, y = 0;
-				if ( _smoothdata ) {
-					x = _elements[i].getSpectrumDataX()[j + SMOOTH_RADIUS];
+				if ( smoothRadius > 0 ) {
+					x = _elements.get(i).getSpectrumDataX()[j + smoothRadius];
 					if ( x < minbound || x > maxbound )
 						continue;
-					for ( int l = 0; l <= SMOOTH_RADIUS * 2; l++ ) {
-						y += _elements[i].getSpectrumDataY()[j + l] / ( 2 * SMOOTH_RADIUS + 1 );
+					for ( int l = 0; l <= smoothRadius * 2; l++ ) {
+						y += _elements.get(i).getSpectrumDataY()[j + l] / ( 2 * smoothRadius + 1 );
 					}
 				} else {
-					x = _elements[i].getSpectrumDataX()[j];
+					x = _elements.get(i).getSpectrumDataX()[j];
 					if ( x < minbound || x > maxbound )
 						continue;
-					y = _elements[i].getSpectrumDataY()[j];
+					y = _elements.get(i).getSpectrumDataY()[j];
 				}
 				// find the min and max for the current window
 				if ( minX == null )
@@ -335,7 +333,7 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 				ydata.get( i ).add( y );
 			}
 		}
-		if ( _capdata ) {
+		if ( _parent.getOptions().isCapData() ) {
 			if ( _ratio ) {
 				minY = (float) Math.max( 0.2, minY );
 				maxY = (float) Math.min( 5.0, maxY );
@@ -348,13 +346,13 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 		redraw();
 	}
 
-	public void setSmoothed(boolean selected) {
-		_smoothdata = selected;
-	}
-
-	public void setCapped(boolean selected) {
-		_capdata = selected;
-	}
+//	public void setSmoothed(boolean selected) {
+//		_smoothdata = selected;
+//	}
+//
+//	public void setCapped(boolean selected) {
+//		_capdata = selected;
+//	}
 
 	@Override
 	public void componentHidden(ComponentEvent ce) {
@@ -384,18 +382,19 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	 */
 	@Override
 	public void mouseClicked(MouseEvent me) {
-		_centerX = ( me.getX() - _leftMargin ) / ( (float) SIZE_X - _leftMargin - _rightMargin ) * ( maxX - minX ) + minX;
+		_parent.getOptions().setCenterX( ( me.getX() - _leftMargin ) / ( (float) SIZE_X - _leftMargin - _rightMargin ) * ( maxX - minX ) + minX);
 		switch ( me.getButton() ) {
 		case MouseEvent.BUTTON1:
-			_zoom *= 2;
+			_parent.getOptions().setZoom(_parent.getOptions().getZoom()*2);
 			break;
 		case MouseEvent.BUTTON3:
-			if ( _zoom > 2 )
-				_zoom /= 2;
+			if ( _parent.getOptions().getZoom() > 2 )
+				_parent.getOptions().setZoom(_parent.getOptions().getZoom()/2);
 			break;
 		}
-		_centerX = Math.max( ( MAX_X - MIN_X ) / _zoom + MIN_X, Math.min( MAX_X - ( MAX_X - MIN_X ) / _zoom, _centerX ) );
-		_parent.updateWindow( _centerX, _centerY, _zoom );
+		_parent.getOptions().setCenterX(Math.max( ( MAX_X - MIN_X ) / _parent.getOptions().getZoom() + MIN_X, Math.min( MAX_X - ( MAX_X - MIN_X ) / _parent.getOptions().getZoom(), _parent.getOptions().getCenterX() ) ));
+//		_parent.updateWindow( _parent.getOptions().getCenterX(), _parent.getOptions().getZoom() );
+		_parent.autosizeAllPlots();
 	}
 
 	@Override
@@ -409,41 +408,37 @@ public class SpectrumPlotter extends JComponent implements ComponentListener, Mo
 	@Override
 	public void mousePressed(MouseEvent me) {
 		prevX = me.getX();
-		//		prevY = me.getY();
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent me) {
 		prevX = null;
-		//		prevY = null;
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent me) {
 		int x = me.getX();
-		//		int y = me.getY();
 		float dragX = ( prevX - x ) * ( maxX - minX ) / SIZE_X;
-		//		float dragY = (prevY - y)*(maxY - minY) / SIZE_Y;
-		_centerX += dragX;
-		_centerX = Math.max( ( MAX_X - MIN_X ) / _zoom + MIN_X, Math.min( MAX_X - ( MAX_X - MIN_X ) / _zoom, _centerX ) );
-		_parent.updateWindow( _centerX, _centerY, _zoom );
+		_parent.getOptions().setCenterX(_parent.getOptions().getCenterX() + dragX);
+		_parent.getOptions().setCenterX(Math.max( ( MAX_X - MIN_X ) / _parent.getOptions().getZoom() + MIN_X, Math.min( MAX_X - ( MAX_X - MIN_X ) / _parent.getOptions().getZoom(), _parent.getOptions().getCenterX() ) ));
+		_parent.autosizeAllPlots();
+//		_parent.updateWindow( _parent.getOptions().getCenterX(), _parent.getOptions().getZoom() );
 		prevX = x;
-		//		prevY = y;
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent me) {
-		currenttrace = ( me.getX() - _leftMargin ) / ( (float) SIZE_X - _leftMargin - _rightMargin ) * ( maxX - minX ) + minX;
-		_parent.updateTrace( currenttrace );
+		_parent.getOptions().setCurrentTrace(( me.getX() - _leftMargin ) / ( (float) SIZE_X - _leftMargin - _rightMargin ) * ( maxX - minX ) + minX);
+		_parent.repaint();
+//		_parent.updateTrace( currenttrace );
 	}
 
-	public void updateWindow(float newcenterX, float newcenterY, float newzoom) {
-		_centerX = newcenterX;
-		_centerY = newcenterY;
-		_zoom = newzoom;
-	}
+//	public void updateWindow(float newcenterX, float newzoom) {
+//		_parent.getOptions().getCenterX() = newcenterX;
+//		_parent.getOptions().getZoom() = newzoom;
+//	}
 
-	public void updateTrace(float newcurrenttrace) {
-		currenttrace = newcurrenttrace;
-	}
+//	public void updateTrace(float newcurrenttrace) {
+//		currenttrace = newcurrenttrace;
+//	}
 }

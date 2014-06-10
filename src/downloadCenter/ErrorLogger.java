@@ -1,5 +1,8 @@
 package downloadCenter;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -7,6 +10,13 @@ import java.util.Calendar;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+/**
+ * A class designed to allow easy error logging. TODO Not
+ * currently in use.
+ * 
+ * @author victoria
+ *
+ */
 public class ErrorLogger {
 	public static String LOG = createUniqueFileName();
 	private static WorkingDirectory _directory = WorkingDirectory.ERRORS;
@@ -58,7 +68,20 @@ public class ErrorLogger {
 		for(Exception e : _errors)
 			strArray.add( e.getMessage() );
 		
-		CommandExecutor.write(_directory+LOG, "", strArray);
+		BufferedWriter writer;
+		try {
+			writer = new BufferedWriter( new FileWriter(_directory+LOG) );
+			
+			for(String current : strArray) {
+				writer.write(current);
+				writer.newLine();
+			}
+			
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			//TODO what to do if logger even fails. wahhhh
+		}
 	}
 
 }

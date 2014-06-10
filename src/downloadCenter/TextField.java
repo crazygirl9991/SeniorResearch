@@ -6,6 +6,13 @@ import java.awt.event.FocusListener;
 
 import javax.swing.JTextField;
 
+/**
+ * Similar to a JTextField, but with checks for
+ * valid input and preset field types.
+ * 
+ * @author victoria
+ *
+ */
 public enum TextField implements FocusListener {
 	RA("Right Ascension"), DEC("Declination"), MJD("MJD"), PLATE("Plate"), FIBER("Fiber");
 	
@@ -14,19 +21,23 @@ public enum TextField implements FocusListener {
 	TextField(String text) { 
 		_textField = new JTextField(text);
 		_textField.setName(text);
-		_textField.setFont(Main.FONT);
+		_textField.setFont(MainAndDownloadUI.FONT);
 		_textField.addFocusListener(this);
-		_textField.setPreferredSize( new Dimension(150, Main.FONT.getSize()+10) );
+		_textField.setPreferredSize( new Dimension(150, MainAndDownloadUI.FONT.getSize()+10) );
 		
 		populate();
 	}
 	
+	/**
+	 * Determines if the input can be converted into integer or double
+	 * values depending on which type of textField it is. 
+	 */
 	public Boolean hasValidTextEntry() {
 		
 		try {
 			if( this == TextField.RA || this == TextField.DEC )
 				Double.valueOf( _textField.getText() );
-			else if( this == TextField.MJD || this == TextField.PLATE || this == TextField.FIBER )
+			else if( this == TextField.MJD || this == TextField.PLATE || _textField.getText() != "Fiber" )
 				Integer.valueOf( _textField.getText() );
 			
 			// If you are able to convert the value in the textfield, then it's valid

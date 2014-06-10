@@ -18,42 +18,41 @@ Java version 1.6 or later
 
 Code Repository Location
 ========================================================================
-https://github.com/crazygirl9991/SeniorResearch
+https://github.com/QuasarSpectralSoftware/Application
 Go to the directory where you'd like to place the working version of the 
 code. Then do:
 	> git init
-	> git clone https://github.com/crazygirl9991/SeniorResearch
+	> git clone https://github.com/QuasarSpectralSoftware/Application
 
-This should check-out the current working version of: 
-     - the downloadCenter Java code
-     - the spectralPlot   Python code  (TOFIX: to be uploaded...) 
+This should check-out the current working version. The only file
+needed to run the application is SpectralAnalysisTool.jar, but
+the rest of the source code is needed to edit and recompile.
 
 
-
-Compiling the downloadCenter code 
+Running the Application 
 ========================================================================
-The downloadCenter Java code can be compiled using the following steps:
-   
-    > javac -g DownloadCenter.java
+To run the software, put the jar in desired directory (creating a new
+directory for the software is recommended, as it will create files
+and directories as needed for run-time). 
 
-    [gives 12 errors, but it's very, very possible I'm doing something 
-    obviously wrong here!!]
-
-
-
-
-
-Running the downloadCenter code 
-========================================================================
-    In Eclipse: 
-
-    From the command line:
+Windows - double-clicking the archive should run it via java by default,
+          however, if alternate settings are being used, then you may
+          have to select an application with which to run the archive.
+          Just select whichever java compiler you have currently installed.
+       
+Linux  -  You must run the java archive from the command line. cd into the
+    	  top level directory and type:
+    	  $ java -jar SpectralAnalysisTool.jar
+    	  
+    	  This should open up the UI.
+    	  
+MacOS  -  TODO
 
 
 
 Last Updated
 =======================================================================
-Thu Mar  6 17:01:58 EST 2014  by      VT and NPR
-
+Thu Mar  6  17:01:58 EST 2014  by      VT and NPR
+Tue June 10 13:12:20 EST 2014  by	   VT
 
 
