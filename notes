@@ -1,12 +1,16 @@
-
-
-Just some (more private) notes for VT, NPR, GTR etc. 
-
-
-Little TO DO's:
+TO DO's:
 ============================
-- Have a copy of the "code schema" uploaded to the code repository here. 
-
+- Add option to "Save to Favorites" for easy retrieval by the user.
+- Main screen should resize with window resize or window resize should be disabled
+- Add columns to the main display for RA, Dec in Hours, Degrees.
+- Add to Plot Options:
+	* Label for smoothing + description
+	* Add toggle for going to next with current settings selected 
+- Fix main display with standard units added to the labels.
+- Allow a user to "Next" to any spectrum and "Next Match" to the next spectrum with matches
+- Fix error logger and figure out how to handle exceptions
+- Refactor!!! Java FX? Documentation for Leland's crap?
+- Unit Tests
 
 
 

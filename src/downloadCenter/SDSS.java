@@ -13,28 +13,29 @@ import nom.tam.fits.TableHDU;
  * @author victoria
  *
  */
-public enum SDSS {one_two, three;
+public enum SDSS {
+	one_two("RAOBJ", "DECOBJ", 640), 
+	three("PLUG_RA", "PLUG_DEC", 1000);
 	
 	public String RA_HEADER;
 	public String DEC_HEADER;
 	public int FIBERS;
 	
+	SDSS(String ra_label, String dec_label, int fibersPerPlate) {
+		RA_HEADER = ra_label;
+		DEC_HEADER = dec_label;
+		FIBERS = fibersPerPlate;
+	}
+	
 	public static SDSS getInstance(int[] plateInfo) {
 		SDSS release;
 		int mjd = plateInfo[0];
 		
-		if(mjd <= 55000) {
+		if(mjd <= 55000)
 			release = SDSS.one_two;
-			release.RA_HEADER = "RAOBJ";
-			release.DEC_HEADER = "DECOBJ";
-			release.FIBERS = 640;
-		} else {
+		else
 			release = SDSS.three;
-			release.RA_HEADER = "PLUG_RA";
-			release.DEC_HEADER = "PLUG_DEC";
-			release.FIBERS = 1000;
-		}
-		
+			
 		return release;	
 	}
 	
