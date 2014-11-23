@@ -11,7 +11,10 @@ TO DO's:
 - Fix error logger and figure out how to handle exceptions
 - Refactor!!! Java FX? Documentation for Leland's crap?
 - Unit Tests
+- Fibers start numbering at 0, so I need to refactor the code which reads 0 as "download all" to be a negative number.
 
 
 
 
+Milestone 1:
+============================
