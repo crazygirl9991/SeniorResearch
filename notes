@@ -1,20 +1,52 @@
-TO DO's:
+Backlog:
 ============================
-- Add option to "Save to Favorites" for easy retrieval by the user.
-- Main screen should resize with window resize or window resize should be disabled
-- Add columns to the main display for RA, Dec in Hours, Degrees.
-- Add to Plot Options:
-	* Label for smoothing + description
-	* Add toggle for going to next with current settings selected 
-- Fix main display with standard units added to the labels.
-- Allow a user to "Next" to any spectrum and "Next Match" to the next spectrum with matches
-- Fix error logger and figure out how to handle exceptions
-- Refactor!!! Java FX? Documentation for Leland's crap?
-- Unit Tests
-- Fibers start numbering at 0, so I need to refactor the code which reads 0 as "download all" to be a negative number.
+- Feature F1 - Add option to "Save to Favorites" for easy retrieval by the user.
+				This feature requires an addition to PlotUI which records "favorited" items
+				This feature adds a checkbox to MainAndDownloadUI which allows user to "toggle favorites"
+- Bug Fix B1 - Main screen should resize with window resize or window resize should be disabled
+- Feature F4 - Add columns to the main display for RA, Dec in Hours, Degrees.
+- Feature F5 - Make table in main screen configurable (which data to display is user controlled)
+- Feature F3 - Add to Plot Options:
+				* Label for smoothing + description
+				* Add toggle for going to next with current settings selected 
+- Bug Fix B2 - Fix main display with standard units added to the labels.
+- Feature F2 - Allow a user to "Next" to any spectrum and "Next Match" to the next spectrum with matches
+- Bug Fix B3 - Fibers start numbering at 0, so I need to refactor the code which reads 0 as "download all" to be a negative number.
 
 
 
 
 Milestone 1:
 ============================
+Luke -
+	Explore Java FX features and refactor/ update UI related code.
+	Bug Fixes: B1
+	
+Tori - 
+	Fix error logger so that errors are handled for further development.
+	Create rest of time frame.
+	Bug Fixes: B2, B3
+
+Due: 12/7
+
+
+
+Milestone 2:
+============================
+Luke -
+	F1
+	
+Tori -
+	F2, F3
+	
+Due: 1/4
+	
+
+Milestone 3:
+============================
+Luke -
+	F5
+Tori -
+	F4
+	
+Due: 1/11
